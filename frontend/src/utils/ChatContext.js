@@ -6,7 +6,7 @@ const ip = "https://javaughnpryce.live:5000";
 
 const ChatContext = createContext();
 
-const socket = io("http://localhost:5000");
+const socket = io(ip);
 
 const ChatProvider = ({ children }) => {
   const [chats, setChats] = useState(
