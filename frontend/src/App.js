@@ -60,7 +60,7 @@ function App() {
               <ChatList />
             </div>
           </Transition>
-          <div className="absolute right-0 h-full w-[100%] md:w-[65%] lg:w-[75%] xl:w-[80%]">
+          <div className="absolute top-0 right-0 h-full w-[100%] md:w-[65%] lg:w-[75%] xl:w-[80%]">
             <Chat audio={audio} />
           </div>
         </div>

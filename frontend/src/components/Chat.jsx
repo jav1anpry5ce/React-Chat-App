@@ -145,14 +145,14 @@ export default function Chat({ audio }) {
       layout
       className={`h-full flex-1 bg-[url('/src/assets/background.jpg')] bg-cover bg-center ${
         hide && "pt-5"
-      } lg:pt-0 `}
+      } lg:pt-0`}
     >
       <ViewImage />
       <div className="flex h-full flex-col justify-between">
         {chatting ? (
           <ChatHead typing={typing} />
         ) : (
-          <div className="flex items-center space-x-3 bg-emerald-500/70 px-2 py-0.5 text-white backdrop-blur-md dark:bg-slate-800">
+          <div className="flex items-center space-x-3 bg-emerald-500/70 px-2 py-0.5 text-white backdrop-blur-md dark:bg-slate-800 md:hidden">
             <AiOutlineMenuUnfold
               className="block h-8 w-8 md:hidden"
               onClick={() => setShow(true)}

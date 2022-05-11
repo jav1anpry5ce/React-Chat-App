@@ -38,7 +38,7 @@ export default function ChatHead({ typing }) {
           />
         </div>
         <motion.div layout>
-          <motion.h5 layout className="font-semibold text-white">
+          <motion.h5 layout="position" className="font-semibold text-white">
             {chatting?.name}
           </motion.h5>
           <AnimatePresence>
