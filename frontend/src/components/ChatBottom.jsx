@@ -70,6 +70,12 @@ export default function ChatBottom() {
     // eslint-disable-next-line
   }, [input]);
 
+  useEffect(() => {
+    if (chatting) {
+      setText("");
+    }
+  }, [chatting]);
+
   return (
     <motion.div
       layout

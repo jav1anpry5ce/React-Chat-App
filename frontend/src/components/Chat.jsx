@@ -162,12 +162,12 @@ export default function Chat({ audio }) {
         {chatting ? (
           <>
             <div
-              className="relative h-full flex-1 overflow-y-auto overflow-x-hidden"
+              className="scroll relative h-full flex-1 overflow-y-auto overflow-x-hidden"
               id="scroll"
             >
-              <div className="space-y-2 px-4 py-3">
+              <ul className="space-y-2 px-4 py-3">
                 {messages?.map((item, index) => (
-                  <div key={index}>
+                  <li key={index}>
                     {new Date(item.time).toDateString() !==
                       new Date(messages[index - 1]?.time).toDateString() && (
                       <div className="top-1 z-50 flex w-full justify-center pb-3 md:sticky">
@@ -183,9 +183,9 @@ export default function Chat({ audio }) {
                       </div>
                     )}
                     <Message data={item} userName={userName} />
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
               <Transition
                 show={!bottom}
                 className="animate-slideIn fixed 

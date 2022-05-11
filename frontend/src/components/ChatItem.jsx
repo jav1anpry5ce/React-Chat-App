@@ -7,7 +7,6 @@ export default function ChatItem({ chat }) {
   const {
     setChatting,
     setShow,
-    socket,
     convos,
     userName,
     chatting,
@@ -15,7 +14,7 @@ export default function ChatItem({ chat }) {
     removeUser,
   } = useContext(ChatContext);
   const [lastChat, setLastChat] = useState("");
-  const [online, setOnline] = useState(false);
+
   useEffect(() => {
     if (convos && convos.length > 0) {
       convos.forEach((conversation, index) => {
@@ -43,15 +42,6 @@ export default function ChatItem({ chat }) {
       });
     }
   }, [convos, chat, userName]);
-  useEffect(() => {
-    socket.on("online", ({ userName, online }) => {
-      if (userName === chat?.userName) {
-        setOnline(online);
-      }
-    });
-    return () => socket.off("online");
-    // eslint-disable-next-line
-  }, [chat]);
 
   useEffect(() => {
     if (chatting?.userName === chat?.userName) {
@@ -105,12 +95,6 @@ export default function ChatItem({ chat }) {
             draggable="false"
             loading="lazy"
           />
-          {online && (
-            <span className="absolute top-0 right-0 flex h-3 w-3">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-75"></span>
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-400"></span>
-            </span>
-          )}
         </div>
         <div className="truncate">
           <h5 className="truncate font-semibold text-white">{chat?.name}</h5>

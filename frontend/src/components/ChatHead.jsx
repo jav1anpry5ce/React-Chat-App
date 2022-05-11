@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { AiOutlineMenuUnfold } from "react-icons/ai";
 import { BiArrowBack } from "react-icons/bi";
 import { MdCall } from "react-icons/md";
@@ -7,7 +7,20 @@ import { ChatContext } from "../utils/ChatContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ChatHead({ typing }) {
-  const { chatting, setShow, setChatting, callUser } = useContext(ChatContext);
+  const { chatting, setShow, setChatting, callUser, socket } =
+    useContext(ChatContext);
+  const [online, setOnline] = useState(false);
+
+  useEffect(() => {
+    socket.on("online", ({ userName, online }) => {
+      if (userName === chatting?.userName) {
+        setOnline(online);
+      }
+    });
+    return () => socket.off("online");
+    // eslint-disable-next-line
+  }, [chatting]);
+
   return (
     <motion.div
       layout
@@ -42,14 +55,26 @@ export default function ChatHead({ typing }) {
             {chatting?.name}
           </motion.h5>
           <AnimatePresence>
-            {typing && (
+            {typing && online && (
               <motion.p
+                layout="position"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="text-xs text-white"
               >
                 typing...
+              </motion.p>
+            )}
+            {online && !typing && (
+              <motion.p
+                layout="position"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-xs text-white"
+              >
+                online
               </motion.p>
             )}
           </AnimatePresence>

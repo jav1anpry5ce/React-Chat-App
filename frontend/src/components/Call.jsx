@@ -109,16 +109,16 @@ export default function Call() {
                   </div>
                   <div className="flex space-x-20">
                     <div
-                      className="cursor-pointer rounded-full bg-green-600 px-2 py-2 text-white"
-                      onClick={answerCall}
-                    >
-                      <BsFillTelephoneFill className="h-8 w-8" />
-                    </div>
-                    <div
                       className="cursor-pointer rounded-full bg-red-500 px-2 py-2 text-white"
                       onClick={ignoreCall}
                     >
                       <ImPhoneHangUp className="h-8 w-8" />
+                    </div>
+                    <div
+                      className="cursor-pointer rounded-full bg-green-600 px-2 py-2 text-white"
+                      onClick={answerCall}
+                    >
+                      <BsFillTelephoneFill className="h-8 w-8" />
                     </div>
                   </div>
                 </div>

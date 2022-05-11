@@ -151,14 +151,15 @@ const ChatProvider = ({ children }) => {
           chats.unshift(item);
         }
       });
-      localStorage.removeItem("chats");
       localStorage.setItem("chats", JSON.stringify(chats));
     };
     const setUnread = (data) => {
       const chat = chats.find((u) => u.userName === data.sender);
+      if (chatting?.userName === chat?.userName) return;
       if (chat) {
         if (chat?.unread) chat.unread += 1;
         else chat.unread = 1;
+        localStorage.setItem("chats", JSON.stringify(chats));
       }
     };
     localStorage.setItem("conversation", JSON.stringify([]));
@@ -176,8 +177,7 @@ const ChatProvider = ({ children }) => {
         );
         conversations[index].messages = update;
         setConvos(conversations);
-        const newData = JSON.stringify(conversations);
-        localStorage.setItem("conversation", newData);
+        localStorage.setItem("conversation", JSON.stringify(conversations));
       } else {
         addUser(data.sender).then(() => {
           swap(data);
@@ -201,16 +201,13 @@ const ChatProvider = ({ children }) => {
     });
 
     socket.on("stuffChanged", ({ user, name, image }) => {
+      console.log(user);
       try {
-        const arr = chats;
-        const u = arr.find((u) => u.userName === user);
+        const u = chats.find((u) => u.userName === user);
         if (u) {
-          console.log(u);
           u.name = name;
           u.image = image;
-          localStorage.setItem("chats", JSON.stringify(arr));
-          setChats((chats) => [...chats, arr]);
-          setChats(arr);
+          localStorage.setItem("chats", JSON.stringify(chats));
         }
       } catch (err) {
         console.error(err);
@@ -219,12 +216,11 @@ const ChatProvider = ({ children }) => {
 
     socket.on("userChanged", (data) => {
       try {
-        const arr = chats;
-        const chat = arr.find((chat) => chat.userName === data.userName);
+        const chat = chats.find((chat) => chat.userName === data.userName);
         if (chat) {
           chat.name = data.name;
           chat.image = data.image;
-          localStorage.setItem("chats", JSON.stringify(arr));
+          localStorage.setItem("chats", JSON.stringify(chats));
         }
       } catch (err) {
         console.error(err);
@@ -267,7 +263,7 @@ const ChatProvider = ({ children }) => {
     });
 
     if (chats.length > 0) {
-      localStorage.setItem("chats", JSON.stringify(chats));
+      // localStorage.setItem("chats", JSON.stringify(chats));
       setInterval(() => {
         chats.forEach((chat) => {
           socket.emit("online", chat.userName);
@@ -286,12 +282,7 @@ const ChatProvider = ({ children }) => {
     const chat = chats.find((u) => u.userName === userName);
     if (chat) {
       chat.unread = 0;
-      const newArray = [chat];
-      const newChats = chats.filter((u) => u.userName !== chat.userName);
-      newChats.forEach((chat) => {
-        newArray.push(chat);
-      });
-      localStorage.setItem("chats", JSON.stringify(newArray));
+      localStorage.setItem("chats", JSON.stringify(chats));
     }
   };
 
@@ -459,6 +450,16 @@ const ChatProvider = ({ children }) => {
       window.location.reload();
     }
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (calling) {
+        if (!callAccepted) leaveCall();
+      }
+    }, 30000);
+    return () => clearTimeout(interval);
+    // eslint-disable-next-line
+  }, [calling, callAccepted]);
 
   const muteUnmute = () => {
     setMyMicStatus((currentStatus) => {

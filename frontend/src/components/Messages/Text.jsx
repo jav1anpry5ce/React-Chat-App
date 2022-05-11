@@ -74,7 +74,7 @@ export default function Text({ data, userName }) {
               : "bg-slate-800/90 text-white"
             : "bg-transparent"
         }
-         min-w-[7rem] max-w-[15rem] rounded-xl px-3 leading-none md:max-w-lg`}
+         min-w-[7rem] max-w-[15rem] rounded-xl px-3 leading-none md:max-w-sm`}
         >
           <Linkify
             properties={{

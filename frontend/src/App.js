@@ -30,9 +30,9 @@ function App() {
         <ReturnCall />
         <div className="relative mx-auto flex-1">
           <div
-            className={`absolute left-0 h-full overflow-y-auto bg-slate-800/70 ${
+            className={`scroll absolute left-0 h-full overflow-y-auto bg-slate-800/70 ${
               hide && "pt-5"
-            } backdrop-blur-md md:w-[35%] lg:w-[25%] lg:pt-0 xl:w-[20%]`}
+            } backdrop-blur-md md:w-[35%] lg:w-[30%] lg:pt-0 xl:w-[25%]`}
           >
             <ChatList />
           </div>
@@ -48,7 +48,7 @@ function App() {
           >
             <div>
               <div
-                className={`sticky top-0 flex w-full justify-end bg-slate-900/70 ${
+                className={`scroll sticky top-0 flex w-full justify-end bg-slate-900/70 ${
                   hide && "pt-5"
                 } backdrop-blur-md`}
               >
@@ -60,7 +60,7 @@ function App() {
               <ChatList />
             </div>
           </Transition>
-          <div className="absolute top-0 right-0 h-full w-[100%] md:w-[65%] lg:w-[75%] xl:w-[80%]">
+          <div className="absolute top-0 right-0 h-full w-[100%] md:w-[65%] lg:w-[70%] xl:w-[75%]">
             <Chat audio={audio} />
           </div>
         </div>
