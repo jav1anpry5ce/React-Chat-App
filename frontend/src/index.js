@@ -1,16 +1,17 @@
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
-import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import "antd/dist/antd.css";
 import "./index.css";
 import App from "./App";
 import { ChatProvider } from "./utils/ChatContext";
 
-ReactDOM.render(
+const container = document.getElementById("root");
+const root = createRoot(container);
+root.render(
   <ChatProvider>
     <App />
-  </ChatProvider>,
-  document.getElementById("root")
+  </ChatProvider>
 );
+
 
 serviceWorkerRegistration.register();

@@ -5,12 +5,22 @@ export default function NameForm() {
   const [userName, setUserName] = useState();
   const [name, setName] = useState();
   const [imageUrl, setImageUrl] = useState();
+  const [form] = Form.useForm();
 
   const handleSubmit = async () => {
     localStorage.setItem("username", userName);
     localStorage.setItem("name", name);
     if (imageUrl) localStorage.setItem("image", imageUrl);
     window.location.reload();
+  };
+
+  const generateImageURL = () => {
+    const randomNumber = Math.floor(Math.random() * 100);
+    const image = `https://avatars.dicebear.com/api/pixel-art-neutral/${randomNumber}.svg`;
+    setImageUrl(image);
+    form.setFieldsValue({
+      image_url: image,
+    });
   };
 
   return (
@@ -20,7 +30,7 @@ export default function NameForm() {
           <h3 className="text-center text-3xl font-semibold text-zinc-800">
             Welcome To Chat App!
           </h3>
-          <Form layout="vertical" onFinish={handleSubmit}>
+          <Form layout="vertical" onFinish={handleSubmit} form={form}>
             <Form.Item
               name="username"
               label="Username"
@@ -52,10 +62,20 @@ export default function NameForm() {
               />
             </Form.Item>
             <Form.Item name="image_url" label="Image URL">
-              <Input
-                className="rounded-md"
-                onChange={(e) => setImageUrl(e.target.value)}
-              />
+              <div className="relative">
+                <Input
+                  className="rounded-md"
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  value={imageUrl}
+                />
+                <button
+                  className="absolute right-1 top-[3px] rounded-full bg-gray-800/30 py-0.5 px-2 text-white hover:bg-gray-800"
+                  type="button"
+                  onClick={generateImageURL}
+                >
+                  Generate Random
+                </button>
+              </div>
             </Form.Item>
             <Form.Item className="m-0">
               <div className="text-center">
