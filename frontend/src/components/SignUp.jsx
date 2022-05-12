@@ -91,12 +91,11 @@ export default function NameForm() {
         </div>
       </div>
 
-      <div className="h-full w-full bg-slate-800 mix-blend-luminosity">
+      <div className="h-full w-full bg-slate-800 p-2">
         <div className="space-y-0.5 py-0.5 text-center">
           <h3 className="text-base font-semibold text-white">
-            Created by Javaughn Pryce
+            &copy; 2021 Created by Javaughn Pryce
           </h3>
-          <h3 className="text-base font-semibold text-white">&copy; 2021</h3>
         </div>
       </div>
     </div>
