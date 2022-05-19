@@ -118,7 +118,7 @@ io.on("connection", (socket) => {
             if (err) console.log(err);
             let message = {
               ...data.message,
-              file: `http://localhost:5000/${date}-${data.message.name}`,
+              file: `https://backend.javaughnpryce.live:5001/${date}-${data.message.name}`,
             };
             const newMessage = {
               id: data.id,
@@ -152,7 +152,7 @@ io.on("connection", (socket) => {
             if (err) console.log(err);
             let message = {
               ...data.message,
-              data: `http://localhost:5000/${date}.wav`,
+              data: `https://backend.javaughnpryce.live:5001/${date}.wav`,
             };
             const newMessage = {
               id: data.id,

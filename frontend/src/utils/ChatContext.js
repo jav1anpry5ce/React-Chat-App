@@ -2,7 +2,7 @@ import { createContext, useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import Peer from "simple-peer";
 const shortid = require("shortid");
-const ip = "https://javaughnpryce.live:5000";
+const ip = "https://backend.javaughnpryce.live:5001";
 
 const ChatContext = createContext();
 

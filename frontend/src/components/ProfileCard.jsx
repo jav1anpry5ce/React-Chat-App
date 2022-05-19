@@ -5,7 +5,7 @@ import { ChatContext } from "../utils/ChatContext";
 export default function ProfileCard() {
   const { name, image, setShowProfile, addUser } = useContext(ChatContext);
   return (
-    <div className="flex cursor-pointer items-center space-x-3 bg-slate-700/60 px-4 py-2 text-white shadow hover:bg-slate-700">
+    <div className="flex cursor-pointer items-center space-x-3 px-4 py-2 text-white hover:bg-slate-700 dark:bg-slate-700/60">
       <div
         className="flex grow items-center space-x-2"
         onClick={() => setShowProfile(true)}

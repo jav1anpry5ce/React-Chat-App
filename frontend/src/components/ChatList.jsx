@@ -27,7 +27,7 @@ export default function ChatList() {
 
   return (
     <motion.div layout className="min-h-full flex-1 text-white">
-      <div className="sticky top-0 z-50 bg-slate-800">
+      <div className="md:sticky md:top-0 md:z-50 dark:md:bg-slate-800">
         <ProfileCard />
         <div className="mx-2 my-1 flex items-center space-x-3 rounded bg-slate-500 px-4 py-1 focus-within:bg-slate-600 hover:bg-slate-600">
           <AiOutlineSearch className="h-7 w-7" onClick={focus} />

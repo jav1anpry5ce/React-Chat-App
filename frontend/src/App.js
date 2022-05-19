@@ -21,7 +21,7 @@ function App() {
   const [isOpen, setIsOpen] = useState(true);
   if (userName && name && image)
     return (
-      <div className=" flex h-screen flex-col">
+      <div className="flex h-screen flex-col">
         {isOpen && (
           <div className="flex items-center bg-slate-600 p-1">
             <p className="grow text-center text-sm font-medium text-gray-100 md:text-xl">
@@ -71,9 +71,9 @@ function App() {
             >
               <div>
                 <div
-                  className={`scroll sticky top-0 flex w-full justify-end bg-slate-900/70 ${
+                  className={`scroll sticky top-0 z-50 flex w-full justify-end bg-slate-900/70 ${
                     hide && "pt-5"
-                  } backdrop-blur-md`}
+                  } backdrop-blur`}
                 >
                   <AiOutlineMenuFold
                     className="mr-2 h-8 w-8 text-white"
