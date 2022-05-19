@@ -18,7 +18,7 @@ function App() {
   const { userName, name, image, show, setShow, hide } =
     useContext(ChatContext);
   const [audio] = useState(new Audio(noti));
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   if (userName && name && image)
     return (
       <div className="flex h-screen flex-col">
