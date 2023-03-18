@@ -9,7 +9,7 @@ export default function ReturnCall() {
   if (hide)
     return (
       <AnimatePresence>
-        <motion.div
+        <motion.button
           layout
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -18,14 +18,14 @@ export default function ReturnCall() {
     px-7 text-white hover:animate-none lg:top-5 lg:right-28
     lg:w-auto lg:animate-pulse lg:rounded-full"
           onClick={() => {
-            setHide(!hide);
+            setHide((prev) => !prev);
           }}
         >
           <p className="text-center">
             Return to call with {calling?.userToCallName || caller?.name}{" "}
             {format(currentTime * 1000)}
           </p>
-        </motion.div>
+        </motion.button>
       </AnimatePresence>
     );
   else return null;

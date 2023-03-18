@@ -25,7 +25,6 @@ app.use("/", function (req, res) {
 
 const server = createServer(app);
 
-
 const io = new Server(server, {
   maxHttpBufferSize: 1e50,
   cors: {
@@ -37,7 +36,7 @@ const io = new Server(server, {
 let usersList = [];
 
 io.on("connection", (socket) => {
-  console.log(`connection established with id ${socket.id}`); 
+  console.log(`connection established with id ${socket.id}`);
   const id = socket.id;
   socket.on("userData", (data) => {
     sql.get_or_create_user(data).then((user) => {
@@ -105,6 +104,7 @@ io.on("connection", (socket) => {
         typing: data.typing,
       });
   });
+
   socket.on("chat", (data) => {
     try {
       if (data.message.file) {
@@ -118,7 +118,7 @@ io.on("connection", (socket) => {
             if (err) console.log(err);
             let message = {
               ...data.message,
-              file: `https://backend.javaughnpryce.live:5001/${date}-${data.message.name}`,
+              file: `http://192.168.1.234:5000/${date}-${data.message.name}`,
             };
             const newMessage = {
               id: data.id,
@@ -152,7 +152,7 @@ io.on("connection", (socket) => {
             if (err) console.log(err);
             let message = {
               ...data.message,
-              data: `https://backend.javaughnpryce.live:5001/${date}.wav`,
+              data: `http://192.168.1.234:5000/${date}.wav`,
             };
             const newMessage = {
               id: data.id,
@@ -200,6 +200,7 @@ io.on("connection", (socket) => {
       console.log(err);
     }
   });
+
   socket.on("getMyChats", (data) => {
     try {
       sql
@@ -238,6 +239,7 @@ io.on("connection", (socket) => {
       console.log(err);
     }
   });
+
   socket.on("callUser", (data) => {
     const user = usersList.find((user) => user.userName === data.userToCall);
     if (user) {
@@ -255,18 +257,22 @@ io.on("connection", (socket) => {
     const user = usersList.find((user) => user.userName === data.to);
     io.to(user.id).emit("callAccepted", data.signal);
   });
+
   socket.on("endCall", (userName) => {
     const user = usersList.find((us) => us.userName === userName);
     if (user) io.to(user.id).emit("endCall");
   });
+
   socket.on("ignoreCall", (userName) => {
     const user = usersList.find((user) => user.userName === userName);
     if (user) io.to(user.id).emit("ignoreCall");
   });
+
   socket.on("busy", (userName) => {
     const user = usersList.find((user) => user.userName === userName);
     if (user) io.to(user.id).emit("busy");
   });
+
   socket.on("disconnect", () => {
     usersList = usersList.filter((user) => user.id !== id);
     io.emit("users", usersList);

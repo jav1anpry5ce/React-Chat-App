@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  mysqldb:
+    image: mysql:8.0
+    container_name: mysqldb
+    command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+    volumes:
+      - ./db/chat.sql:/docker-entrypoint-initdb.d/0_chat.sql
+      - $HOME/database:/var/lib/mysql
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+    environment:
+      MYSQL_DATABASE: chat_app
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysqldb
+    networks:
+      - raspserver
+      
+  server:
+    image: jav1anpry5ce/chat_app:latest
+    container_name: server
+    # volumes:
+    #   - $HOME/server:/server
+    ports:
+      - 5000:5000
+    expose:
+      - 5000
+    environment:
+      HOST: mysqldb
+      PORT: 5000
+      DBPORT: 3306
+      USER: 'admin'
+      PASSWORD: 'password'
+      DB: chat_app
+      SERVICE_TAGS: dev
+      SERVICE_NAME: server
+    networks:
+      - raspserver
+    depends_on:
+      - mysqldb
+
+networks:
+  raspserver:
+    driver: bridge

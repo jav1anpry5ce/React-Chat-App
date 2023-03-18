@@ -1,6 +1,6 @@
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import { createRoot } from "react-dom/client";
-import "antd/dist/antd.css";
+import "antd/dist/antd.min.css";
 import "./index.css";
 import App from "./App";
 import { ChatProvider } from "./utils/ChatContext";

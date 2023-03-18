@@ -2,11 +2,11 @@ import { createContext, useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import Peer from "simple-peer";
 const shortid = require("shortid");
-const ip = "https://backend.javaughnpryce.live:5001";
+// const ip = "https://backend.javaughnpryce.live:5001";
 
 const ChatContext = createContext();
 
-const socket = io(ip);
+const socket = io("192.168.1.234:5000");
 
 const ChatProvider = ({ children }) => {
   const [chats, setChats] = useState(

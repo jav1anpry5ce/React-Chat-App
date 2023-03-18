@@ -30,12 +30,14 @@ export default function File({ data, userName }) {
               }`}
       >
         <p>{data?.message.name}</p>
-        <MdDownloading
-          className="mt-1 h-7 w-7 cursor-pointer text-white hover:text-gray-300 md:h-6 md:w-6"
-          onClick={() => {
-            downloadFile(data?.message.file, data?.message.name);
-          }}
-        />
+        <div>
+          <MdDownloading
+            className="mt-1 h-7 w-7 cursor-pointer text-white hover:text-gray-300 md:h-6 md:w-6"
+            onClick={() => {
+              downloadFile(data?.message.file, data?.message.name);
+            }}
+          />
+        </div>
       </div>
       {data?.message.text && (
         <Linkify

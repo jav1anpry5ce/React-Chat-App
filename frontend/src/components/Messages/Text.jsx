@@ -1,6 +1,8 @@
-import React from "react";
 import { MdDownloading } from "react-icons/md";
 import Linkify from "react-linkify";
+import { useState } from "react";
+import useContextMenu from "../../utils/useContextMenu";
+import ContextMenu from "../ContextMenu";
 
 function downloadFile(file, name) {
   const linkSource = file;
@@ -12,8 +14,19 @@ function downloadFile(file, name) {
 }
 
 export default function Text({ data, userName }) {
+  const { clicked, setClicked, points, setPoints } = useContextMenu();
   return (
-    <div>
+    <div
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setClicked(true);
+        setPoints({
+          x: e.pageX,
+          y: e.pageY,
+        });
+      }}
+    >
+      {clicked && <ContextMenu top={points.y} left={points.x} />}
       {data?.message.file ? (
         <div
           className={`max-w-[15rem] break-words md:max-w-lg ${

@@ -2,10 +2,11 @@ const mysql = require("mysql2");
 require("dotenv").config();
 
 const con = mysql.createConnection({
-  host: process.env.HOST,
-  user: process.env.USER,
-  password: process.env.PASSWORD,
-  database: process.env.DB,
+  host: process.env.HOST || "localhost",
+  user: process.env.USER || "root",
+  port: process.env.DBPORT || 3306,
+  password: process.env.PASSWORD || "password",
+  database: process.env.DB || "chat_app",
 });
 
 const openConnection = () => {
@@ -132,9 +133,7 @@ const createGroupChat = async (data) => {
   });
 };
 
-const getGroupChat = async (id) => {
-  
-}
+const getGroupChat = async (id) => {};
 
 const getMessage = (id) => {
   const sql = `SELECT * FROM message WHERE id = '${id}'`;
