@@ -2,15 +2,36 @@ import React, { useContext } from "react";
 import { AiOutlineEye } from "react-icons/ai";
 import { ChatContext } from "../../utils/ChatContext";
 import Linkify from "react-linkify";
+import useContextMenu from "../../utils/useContextMenu";
+import ContextMenu from "../ContextMenu";
 
 export default function Image({ data, userName }) {
   const { setViewing, setViewSrc } = useContext(ChatContext);
+  const { clicked, setClicked, points, setPoints } = useContextMenu();
+  const { userName: uname } = useContext(ChatContext);
+
   return (
     <div
       className={`${
         data?.sender === userName ? "bg-blue-500/90" : "bg-slate-800/90"
       } max-h-auto relative max-w-[20rem] rounded-md text-white md:max-w-[27rem]`}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setClicked(true);
+        setPoints({
+          x: e.pageX,
+          y: e.pageY,
+        });
+      }}
     >
+      {clicked && data?.sender === uname && (
+        <ContextMenu
+          top={points.y}
+          left={points.x}
+          messageID={data.id}
+          conversationID={data.conversationId}
+        />
+      )}
       <div
         className="group relative cursor-pointer"
         onClick={() => {

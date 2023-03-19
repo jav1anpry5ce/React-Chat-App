@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { ChatContext } from "../utils/ChatContext";
 import { AiOutlineCloseCircle } from "react-icons/ai";
+import { MdInsertPhoto } from "react-icons/md";
 import { motion } from "framer-motion";
 
 export default function ChatItem({ chat }) {
@@ -32,7 +33,7 @@ export default function ChatItem({ chat }) {
           } else if (lastChat?.message?.type === "audio") {
             setLastChat("voice memo");
           } else if (lastChat?.message?.type === "image") {
-            setLastChat("image");
+            setLastChat("photo");
           } else if (lastChat?.message?.type === "application") {
             setLastChat(lastChat?.message?.name);
           } else if (lastChat?.message?.type === "video") {
@@ -98,7 +99,16 @@ export default function ChatItem({ chat }) {
         </div>
         <div className="truncate">
           <h5 className="truncate font-semibold text-white">{chat?.name}</h5>
-          <p className="truncate text-sm text-white">{lastChat}</p>
+          <p className="truncate text-sm text-white">
+            {lastChat === "photo" ? (
+              <div className="flex items-center gap-1">
+                <MdInsertPhoto fontSize={20} />
+                <p>Photo</p>
+              </div>
+            ) : (
+              lastChat
+            )}
+          </p>
         </div>
       </div>
     </motion.li>

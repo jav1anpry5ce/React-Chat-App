@@ -273,6 +273,18 @@ io.on("connection", (socket) => {
     if (user) io.to(user.id).emit("busy");
   });
 
+  socket.on("deleteMessage", ({ messageID, conversationID, userName }) => {
+    sql
+      .deleteMessage(messageID)
+      .then(() => {
+        io.emit("messageDeleted", { messageID, conversationID });
+      })
+      .catch((err) => {
+        const user = usersList.find((user) => user.userName === userName);
+        if (user) io.to(user.id).emit("error", err);
+      });
+  });
+
   socket.on("disconnect", () => {
     usersList = usersList.filter((user) => user.id !== id);
     io.emit("users", usersList);

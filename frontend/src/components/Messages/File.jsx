@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useContext } from "react";
 import { MdDownloading } from "react-icons/md";
 import Linkify from "react-linkify";
+import { ChatContext } from "../../utils/ChatContext";
+import useContextMenu from "../../utils/useContextMenu";
+import ContextMenu from "../ContextMenu";
 
 function downloadFile(file, name) {
   const linkSource = file;
@@ -12,12 +15,30 @@ function downloadFile(file, name) {
 }
 
 export default function File({ data, userName }) {
+  const { clicked, setClicked, points, setPoints } = useContextMenu();
+  const { userName: uname } = useContext(ChatContext);
   return (
     <div
       className={`max-w-xs break-words md:max-w-lg ${
         data?.sender === userName ? "bg-blue-500/90" : "bg-slate-800/90"
       } rounded  text-white`}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setClicked(true);
+        setPoints({
+          x: e.pageX,
+          y: e.pageY,
+        });
+      }}
     >
+      {clicked && data?.sender === uname && (
+        <ContextMenu
+          top={points.y}
+          left={points.x}
+          messageID={data.id}
+          conversationID={data.conversationId}
+        />
+      )}
       <div
         className={`flex transform items-center
               justify-between space-x-2 rounded-t 

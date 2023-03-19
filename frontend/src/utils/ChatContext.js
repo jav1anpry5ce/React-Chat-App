@@ -227,10 +227,28 @@ const ChatProvider = ({ children }) => {
       }
     });
 
+    socket.on("messageDeleted", ({ messageID, conversationID }) => {
+      const conversations = JSON.parse(localStorage.getItem("conversation"));
+      const conversation = conversations.find(
+        (con) => con.id === conversationID
+      );
+      if (!conversation) return;
+      const message = conversation.messages.find((msg) => msg.id === messageID);
+      conversation.messages.splice(conversation.messages.indexOf(message), 1);
+      setConvos(conversations);
+      localStorage.setItem("conversation", JSON.stringify(conversations));
+    });
+
+    socket.on("error", (err) => {
+      alert(err);
+    });
+
     return () => {
       socket.off("newMessage");
       socket.off("stuffChanged");
       socket.off("userChanged");
+      socket.off("messageDeleted");
+      socket.off("error");
     };
     // eslint-disable-next-line
   }, []);
@@ -532,6 +550,10 @@ const ChatProvider = ({ children }) => {
     localStorage.setItem("chats", JSON.stringify(newChats));
   };
 
+  const deleteMessage = (messageID, conversationID) => {
+    socket.emit("deleteMessage", { messageID, conversationID, userName });
+  };
+
   const value = {
     chats,
     setChats,
@@ -578,6 +600,7 @@ const ChatProvider = ({ children }) => {
     screenShare,
     setZero,
     removeUser,
+    deleteMessage,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

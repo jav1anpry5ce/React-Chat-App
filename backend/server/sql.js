@@ -222,6 +222,32 @@ const createMessage = (data) => {
   });
 };
 
+const deleteMessage = (id) => {
+  const sql = `DELETE FROM messages WHERE id = '${id}'`;
+  const sql2 = `DELETE FROM message WHERE id = '${id}'`;
+  const timeSql = `SELECT time FROM messages WHERE id = '${id}'`;
+  return new Promise((resolve, reject) => {
+    try {
+      con.query(timeSql, (err, result) => {
+        if (err) return reject(err);
+        const time = new Date(result[0].time).getTime();
+        const limit = 1000 * 60 * 15;
+        const isTimePassed = new Date().getTime() - time < limit ? false : true;
+        if (isTimePassed) return reject("Time limit exceeded");
+        con.query(sql, (err) => {
+          if (err) return reject(err);
+          con.query(sql2, (err) => {
+            if (err) return reject(err);
+            return resolve("Success");
+          });
+        });
+      });
+    } catch (err) {
+      return reject(err);
+    }
+  });
+};
+
 module.exports = {
   createConversation,
   getConversation,
@@ -232,4 +258,5 @@ module.exports = {
   updateUser,
   getUser,
   createGroupChat,
+  deleteMessage,
 };

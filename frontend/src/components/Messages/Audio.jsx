@@ -10,6 +10,7 @@ export default function Audio({ data, userName }) {
         .replace(/(.*)\D\d+/, "$1")}
       sender={data.sender}
       userName={userName}
+      data={data}
     />
   );
 }

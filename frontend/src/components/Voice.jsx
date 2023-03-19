@@ -1,9 +1,14 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useContext } from "react";
 import { BsPlayFill } from "react-icons/bs";
 import { AiOutlinePause } from "react-icons/ai";
+import { ChatContext } from "../utils/ChatContext";
+import useContextMenu from "../utils/useContextMenu";
+import ContextMenu from "./ContextMenu";
 const format = require("format-duration");
 
-export default function Voice({ src, time, sender, userName }) {
+export default function Voice({ src, time, sender, userName, data }) {
+  const { clicked, setClicked, points, setPoints } = useContextMenu();
+  const { userName: uname } = useContext(ChatContext);
   const audioPlayer = useRef();
   const [currentTime, setCurrentTime] = useState(0);
   const [seekValue, setSeekValue] = useState(0);
@@ -59,7 +64,23 @@ export default function Voice({ src, time, sender, userName }) {
       className={`${
         sender === userName ? "bg-blue-500/90" : "bg-slate-800/90"
       } min-w-[17rem] rounded-full px-3 py-1`}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setClicked(true);
+        setPoints({
+          x: e.pageX,
+          y: e.pageY,
+        });
+      }}
     >
+      {clicked && data?.sender === uname && (
+        <ContextMenu
+          top={points.y}
+          left={points.x}
+          messageID={data.id}
+          conversationID={data.conversationId}
+        />
+      )}
       <div className="flex w-full items-center space-x-1">
         {playing ? (
           <AiOutlinePause
