@@ -231,10 +231,24 @@ const ChatProvider = ({ children }) => {
       setChats(chats);
     });
 
+    socket.on("groupUpdated", (data) => {
+      const chats = JSON.parse(localStorage.getItem("chats"));
+      const group = chats.find((chat) => chat.id === data.id);
+      if (!group) {
+        chats.push(data);
+        localStorage.setItem("chats", JSON.stringify(chats));
+        setChats(chats);
+        return;
+      }
+      group.name = data.name;
+      group.image = data.image;
+      group.members = data.members;
+      localStorage.setItem("chats", JSON.stringify(chats));
+      setChats(chats);
+    });
+
     return () => {
       socket.off("newMessage");
-      socket.off("stuffChanged");
-      socket.off("userChanged");
       socket.off("messageDeleted");
       socket.off("error");
       socket.off("newGroup");
@@ -274,14 +288,6 @@ const ChatProvider = ({ children }) => {
       user.name = name;
       user.image = image;
       localStorage.setItem("user", JSON.stringify(user));
-      chats.forEach((chat) => {
-        socket.emit("stuffChanged", {
-          user: chat.username,
-          me: user?.username,
-          name,
-          image,
-        });
-      });
     });
 
     return () => {
@@ -583,6 +589,10 @@ const ChatProvider = ({ children }) => {
     socket.emit("addGroupMember", data);
   };
 
+  const changeGroup = (data) => {
+    socket.emit("changeGroup", data);
+  };
+
   const value = {
     user,
     chats,
@@ -634,6 +644,7 @@ const ChatProvider = ({ children }) => {
     group,
     setGroup,
     addGroupMember,
+    changeGroup,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

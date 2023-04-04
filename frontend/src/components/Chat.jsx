@@ -74,6 +74,11 @@ export default function Chat({ audio }) {
     }, 5000);
   }, [typing]);
 
+  // useEffect(() => {
+  //   console.log(chat);
+  //   // eslint-disable-next-line
+  // }, [chat]);
+
   useEffect(() => {
     var listener;
     const s = document.getElementById("scroll");

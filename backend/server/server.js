@@ -400,6 +400,15 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("changeGroup", (data) => {
+    sql.updateGroupChat(data).then((group) => {
+      group.members.forEach((member) => {
+        const user = usersList.find((u) => u.username === member.username);
+        if (user) io.to(user.id).emit("groupUpdated", group);
+      });
+    });
+  });
+
   socket.on("addGroupMember", ({ groupId, username }) => {
     sql
       .addMemberToGroup({ groupId, username })

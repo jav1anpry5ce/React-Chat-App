@@ -58,13 +58,10 @@ export default function ChatHead({ typing }) {
             loading="lazy"
           />
         </div>
-        <motion.div layout>
-          <motion.h5
-            layout="position"
-            className="font-semibold text-white transition duration-300 group-hover:text-gray-400"
-          >
+        <div>
+          <p className="font-semibold text-white transition duration-300 group-hover:text-gray-400">
             {chatting?.name}
-          </motion.h5>
+          </p>
           <AnimatePresence>
             {typing && online && (
               <motion.p
@@ -89,7 +86,7 @@ export default function ChatHead({ typing }) {
               </motion.p>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
       </div>
       {chatting.chatType !== "group" && (
         <div className="flex items-center space-x-6 pr-4">

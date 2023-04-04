@@ -456,6 +456,30 @@ const get_or_create_token = ({ username, token }) => {
   });
 };
 
+const updateGroupChat = (data) => {
+  return new Promise(async (resolve, reject) => {
+    const sql = `UPDATE groups SET name = '${data.name}', image = '${data.image}' WHERE id = '${data.id}'`;
+    con.query(sql, async (err) => {
+      if (err) return reject(err);
+      const promises = data.members.map(async (member) => {
+        return await addMemberToGroup({
+          groupId: data.id,
+          username: member.username,
+        });
+      });
+      // data.members.forEach(async (member) => {
+      //   await addMemberToGroup({
+      //     groupId: data.id,
+      //     username: member.username,
+      //   });
+      // });
+      await Promise.all(promises);
+      const group = await getGroupChatById(data.id);
+      resolve(group);
+    });
+  });
+};
+
 module.exports = {
   createConversation,
   getConversation,
@@ -477,4 +501,5 @@ module.exports = {
   getConversationById,
   createUser,
   get_or_create_token,
+  updateGroupChat,
 };

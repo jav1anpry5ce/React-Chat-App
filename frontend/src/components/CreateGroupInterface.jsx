@@ -96,7 +96,7 @@ export default function CreateGroupInterface() {
             />
           </div>
           <div className="flex grow flex-col gap-2">
-            <div className="gap flex grow flex-wrap justify-center gap-2 rounded bg-white/5 p-2 backdrop-blur">
+            <div className="gap flex max-h-[250px] grow flex-wrap justify-center gap-2 rounded bg-white/5 p-2 backdrop-blur">
               {members.map((user) => (
                 <div
                   key={user.username}
