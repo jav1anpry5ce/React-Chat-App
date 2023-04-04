@@ -16,7 +16,7 @@ const useRecorder = () => {
         setAudio(base64String);
       };
     }
-  }, [audioBlob, cancel]);
+  }, [audioBlob, cancel, recorder]);
 
   useEffect(() => {
     if (recorder === null) {

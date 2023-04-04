@@ -14,13 +14,15 @@ function downloadFile(file, name) {
   downloadLink.click();
 }
 
-export default function File({ data, userName }) {
+export default function File({ data, username }) {
   const { clicked, setClicked, points, setPoints } = useContextMenu();
-  const { userName: uname } = useContext(ChatContext);
+  const { user } = useContext(ChatContext);
   return (
     <div
       className={`max-w-xs break-words md:max-w-lg ${
-        data?.sender === userName ? "bg-blue-500/90" : "bg-slate-800/90"
+        data?.sender.username === username
+          ? "bg-blue-500/90"
+          : "bg-slate-800/90"
       } rounded  text-white`}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -31,7 +33,7 @@ export default function File({ data, userName }) {
         });
       }}
     >
-      {clicked && data?.sender === uname && (
+      {clicked && data?.sender.username === user?.username && (
         <ContextMenu
           top={points.y}
           left={points.x}
@@ -45,7 +47,7 @@ export default function File({ data, userName }) {
               px-2 py-1.5 text-white duration-300 ${
                 data?.message.text
                   ? "bg-slate-700"
-                  : data?.sender === userName
+                  : data?.sender.username === username
                   ? "bg-blue-500/0"
                   : "bg-slate-800/90"
               }`}

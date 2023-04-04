@@ -92,8 +92,8 @@ export default function Call() {
             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
             {receivingCall && !callAccepted ? (
-              <div className="inline-block h-[18rem] w-full transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-[30rem] sm:align-middle">
-                <div className="flex h-full flex-col items-center justify-between bg-white pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div className="inline-block h-[18rem] w-full transform overflow-hidden rounded-lg bg-gray-900 text-left align-bottom text-white shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-[30rem] sm:align-middle">
+                <div className="flex h-full flex-col items-center justify-between bg-gray-900 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <p className="text-lg font-semibold">
                     You are receiving a call
                   </p>
@@ -168,7 +168,7 @@ export default function Call() {
                         </div>
                         {myMicStatus ? (
                           <div
-                            className="cursor-pointer rounded-full bg-gray-100 px-2 py-2 shadow-md hover:shadow-lg"
+                            className="cursor-pointer rounded-full bg-white px-2 py-2 shadow-md hover:shadow-lg"
                             onClick={muteUnmute}
                           >
                             <BsMicFill className="h-8 w-8" />
@@ -221,7 +221,7 @@ export default function Call() {
                         </div>
                         {myMicStatus ? (
                           <div
-                            className="cursor-pointer rounded-full bg-gray-100 px-2 py-2 shadow-md hover:shadow-lg"
+                            className="cursor-pointer rounded-full bg-green-500 px-2 py-2 shadow-md hover:shadow-lg"
                             onClick={muteUnmute}
                           >
                             <BsMicFill className="h-8 w-8" />
@@ -261,8 +261,8 @@ export default function Call() {
                 </div>
               </div>
             ) : (
-              <div className="inline-block h-[30rem] w-full transform overflow-hidden rounded-lg bg-gray-100 text-left align-bottom shadow-xl transition-all sm:my-8 sm:max-w-sm sm:align-middle">
-                <div className="flex h-full flex-col items-center bg-gray-300/50 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div className="inline-block h-[30rem] w-full transform overflow-hidden rounded-lg bg-gray-900 text-left align-bottom text-white shadow-xl transition-all sm:my-8 sm:max-w-sm sm:align-middle">
+                <div className="flex h-full flex-col items-center bg-gray-900 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   {callAccepted && (
                     <audio ref={userStream} autoPlay onTimeUpdate={onPlaying} />
                   )}
@@ -295,7 +295,7 @@ export default function Call() {
                     </div>
                     {myMicStatus ? (
                       <div
-                        className="cursor-pointer rounded-full bg-gray-100 px-2 py-2 shadow-md hover:shadow-lg"
+                        className="cursor-pointer rounded-full bg-green-500 px-2 py-2 shadow-md hover:shadow-lg"
                         onClick={muteUnmute}
                       >
                         <BsMicFill className="h-8 w-8" />

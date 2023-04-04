@@ -3,14 +3,25 @@ const { Server } = require("socket.io");
 const path = require("path");
 const fs = require("fs");
 require("dotenv").config();
-require("cors");
+const cors = require("cors");
 const shortid = require("shortid");
 const sql = require("./sql");
 const express = require("express");
+const bodyParser = require("body-parser");
+const router = require("./routes");
 
 const app = express();
 
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST"],
+  })
+);
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "/files")));
+app.use("/api", router);
 app.use("/", function (req, res) {
   res.sendFile(path.join(__dirname, "/files"));
 });
@@ -36,76 +47,92 @@ const io = new Server(server, {
 let usersList = [];
 
 io.on("connection", (socket) => {
-  console.log(`connection established with id ${socket.id}`);
+  console.log(
+    `connection established from ${socket.request.socket._peername.address}:${socket.request.socket._peername.port}`
+  );
   const id = socket.id;
   socket.on("userData", (data) => {
+    if (!data) return;
     sql.get_or_create_user(data).then((user) => {
       const joinedUser = {
         id: id,
         name: user.name,
         image: user.image,
-        userName: user.userName,
+        username: user.username,
       };
-      const us = usersList.find((u) => u.userName === user.userName);
-      if (us) {
-        us.id = id;
-        us.name = user.name;
-        us.image = user.image;
+      const u = usersList.find((u) => u.username === user.username);
+      if (u) {
+        u.id = id;
+        u.name = user.name;
+        u.image = user.image;
       } else {
         usersList.push(joinedUser);
       }
     });
   });
 
-  socket.on("online", (userName) => {
-    const user = usersList.find((user) => user.userName === userName);
+  socket.on("online", (username) => {
+    const user = usersList.find((user) => user.username === username);
     if (user) {
-      socket.emit("online", { userName, online: true });
+      socket.emit("online", { username, online: true });
     } else {
-      socket.emit("online", { userName, online: false });
+      socket.emit("online", { username, online: false });
     }
   });
 
-  socket.on("addingUser", (userName) => {
+  socket.on("addingUser", async ({ userToAdd, user }) => {
+    const conversation = await sql.getConversation({
+      users: [userToAdd, user],
+    });
+    if (conversation)
+      return socket.emit("error", { message: "Conversation already exists" });
+    if (userToAdd === user)
+      return socket.emit("error", {
+        message: "You can't talk to yourself silly!",
+      });
     sql
-      .addUser(userName)
+      .getUser(userToAdd)
       .then((data) => {
-        socket.emit("userAdded", data);
+        const conversation = {
+          id: shortid.generate(),
+          users: [userToAdd, user],
+        };
+        sql.createConversation(conversation).then(() => {
+          const chat = {
+            id: conversation.id,
+            name: data.name,
+            image: data.image,
+            username: data.username,
+            messages: [],
+            chatType: "private",
+            unread: 0,
+          };
+          io.to(id).emit("userAdded", chat);
+          const user = usersList.find((user) => user.username === userToAdd);
+          if (user) io.to(user.id).emit("userAdded", chat);
+        });
       })
       .catch(() => {
         socket.emit("notFound");
       });
   });
 
-  socket.on("updateMe", ({ userName, name, image }) => {
-    sql.updateUser(userName, name, image).then(() => {
+  socket.on("updateMe", ({ username, name, image }) => {
+    sql.updateUser(username, name, image).then(() => {
       socket.emit("updated", { name, image });
     });
   });
 
-  socket.on("userChanged", (userName) => {
-    sql.getUser(userName).then((data) => {
-      socket.emit("userChanged", data);
-    });
-  });
-
-  socket.on("stuffChanged", ({ user, me, name, image }) => {
-    const u = usersList.find((u) => u.userName === user);
-    if (u) {
-      socket.to(u.id).emit("stuffChanged", { user: me, name, image });
-    }
-  });
-
   socket.on("typing", (data) => {
-    const user = usersList.find((user) => user.userName === data.userName);
+    const user = usersList.find((user) => user.username === data.username);
     if (user)
       io.to(user.id).emit("usertyping", {
-        user: data.userName,
+        user: data.username,
         typing: data.typing,
       });
   });
 
-  socket.on("chat", (data) => {
+  socket.on("chat", async (data) => {
     try {
       if (data.message.file) {
         base64Data = data.message.file.split(";base64,").pop();
@@ -114,27 +141,27 @@ io.on("connection", (socket) => {
           `files/${date}-${data.message.name}`,
           base64Data,
           { encoding: "base64" },
-          (err) => {
+          async (err) => {
             if (err) console.log(err);
             let message = {
               ...data.message,
-              file: `http://192.168.1.234:5000/${date}-${data.message.name}`,
+              file: `http://localhost:5000/${date}-${data.message.name}`,
             };
             const newMessage = {
               id: data.id,
               conversationId: data.conversationId,
-              sender: data.sender,
-              receiver: data.receiver,
+              sender: await sql.getUser(data.sender),
+              receiver: await sql.getUser(data.receiver),
               message: message,
               time: data.time,
             };
             sql.createMessage(newMessage).then(() => {
               sql
-                .getConversation({ users: [data.sender, data.receiver] })
+                .getConversationById(data.conversationId)
                 .then((conversation) => {
                   const users = JSON.parse(conversation.users);
                   users.map((user) => {
-                    const id = usersList.find((u) => u.userName === user);
+                    const id = usersList.find((u) => u.username === user);
                     if (id) io.to(id.id).emit("newMessage", newMessage);
                   });
                 });
@@ -148,27 +175,27 @@ io.on("connection", (socket) => {
           `files/${date}.wav`,
           base64Data,
           { encoding: "base64" },
-          (err) => {
+          async (err) => {
             if (err) console.log(err);
             let message = {
               ...data.message,
-              data: `http://192.168.1.234:5000/${date}.wav`,
+              data: `http://localhost:5000/${date}.wav`,
             };
             const newMessage = {
               id: data.id,
               conversationId: data.conversationId,
-              sender: data.sender,
-              receiver: data.receiver,
+              sender: await sql.getUser(data.sender),
+              receiver: await sql.getUser(data.receiver),
               message: message,
               time: data.time,
             };
             sql.createMessage(newMessage).then(() => {
               sql
-                .getConversation({ users: [data.sender, data.receiver] })
+                .getConversationById(data.conversationId)
                 .then((conversation) => {
                   const users = JSON.parse(conversation.users);
                   users.map((user) => {
-                    const id = usersList.find((u) => u.userName === user);
+                    const id = usersList.find((u) => u.username === user);
                     if (id) io.to(id.id).emit("newMessage", newMessage);
                   });
                 });
@@ -179,21 +206,19 @@ io.on("connection", (socket) => {
         const newMessage = {
           id: data.id,
           conversationId: data.conversationId,
-          sender: data.sender,
-          receiver: data.receiver,
+          sender: await sql.getUser(data.sender),
+          receiver: await sql.getUser(data.receiver),
           message: data.message,
           time: data.time,
         };
         sql.createMessage(newMessage).then(() => {
-          sql
-            .getConversation({ users: [data.sender, data.receiver] })
-            .then((conversation) => {
-              const users = JSON.parse(conversation.users);
-              users.map((user) => {
-                const id = usersList.find((u) => u.userName === user);
-                if (id) io.to(id.id).emit("newMessage", newMessage);
-              });
+          sql.getConversationById(data.conversationId).then((conversation) => {
+            const users = JSON.parse(conversation.users);
+            users.map((user) => {
+              const id = usersList.find((u) => u.username === user);
+              if (id) io.to(id.id).emit("newMessage", newMessage);
             });
+          });
         });
       }
     } catch (err) {
@@ -201,47 +226,8 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("getMyChats", (data) => {
-    try {
-      sql
-        .getConversation({ users: [data.sender, data.receiver] })
-        .then((conversation) => {
-          if (conversation) {
-            sql.getConversationMessages(conversation.id).then((messages) => {
-              const con = {
-                id: conversation.id,
-                users: JSON.parse(conversation.users),
-                messages: messages,
-              };
-              socket.emit("yourChats", [con]);
-            });
-          } else {
-            const newConversation = {
-              id: shortid.generate(),
-              users: [data.sender, data.receiver],
-              messages: [],
-            };
-            sql.createConversation(newConversation).then(() => {
-              sql
-                .getConversation({ users: [data.sender, data.receiver] })
-                .then((conversation) => {
-                  const con = {
-                    id: conversation.id,
-                    users: JSON.parse(conversation.users),
-                    messages: [],
-                  };
-                  socket.emit("yourChats", [con]);
-                });
-            });
-          }
-        });
-    } catch (err) {
-      console.log(err);
-    }
-  });
-
   socket.on("callUser", (data) => {
-    const user = usersList.find((user) => user.userName === data.userToCall);
+    const user = usersList.find((user) => user.username === data.userToCall);
     if (user) {
       io.to(user.id).emit("callUser", {
         signal: data.signalData,
@@ -254,35 +240,183 @@ io.on("connection", (socket) => {
   });
 
   socket.on("answerCall", (data) => {
-    const user = usersList.find((user) => user.userName === data.to);
+    const user = usersList.find((user) => user.username === data.to);
     io.to(user.id).emit("callAccepted", data.signal);
   });
 
-  socket.on("endCall", (userName) => {
-    const user = usersList.find((us) => us.userName === userName);
+  socket.on("endCall", (username) => {
+    const user = usersList.find((us) => us.username === username);
     if (user) io.to(user.id).emit("endCall");
   });
 
-  socket.on("ignoreCall", (userName) => {
-    const user = usersList.find((user) => user.userName === userName);
+  socket.on("ignoreCall", (username) => {
+    const user = usersList.find((user) => user.username === username);
     if (user) io.to(user.id).emit("ignoreCall");
   });
 
-  socket.on("busy", (userName) => {
-    const user = usersList.find((user) => user.userName === userName);
+  socket.on("busy", (username) => {
+    const user = usersList.find((user) => user.username === username);
     if (user) io.to(user.id).emit("busy");
   });
 
-  socket.on("deleteMessage", ({ messageID, conversationID, userName }) => {
+  socket.on("deleteMessage", ({ messageID, conversationID, username }) => {
     sql
       .deleteMessage(messageID)
-      .then(() => {
-        io.emit("messageDeleted", { messageID, conversationID });
+      .then((message) => {
+        io.emit("messageDeleted", { messageID, conversationID, message });
       })
       .catch((err) => {
-        const user = usersList.find((user) => user.userName === userName);
-        if (user) io.to(user.id).emit("error", err);
+        const user = usersList.find((user) => user.username === username);
+        if (user) io.to(user.id).emit("error", { message: err });
       });
+  });
+
+  socket.on("sendGroupMessage", async (data) => {
+    try {
+      if (data.message?.file) {
+        base64Data = data.message.file.split(";base64,").pop();
+        const date = Date.now();
+        fs.writeFile(
+          `files/${date}-${data.message.name}`,
+          base64Data,
+          { encoding: "base64" },
+          async (err) => {
+            if (err) console.log(err);
+            let message = {
+              ...data.message,
+              file: `http://localhost:5000/${date}-${data.message.name}`,
+            };
+            const newMessage = {
+              id: data.id,
+              conversationId: data.conversationId,
+              sender: await sql.getUser(data.sender),
+              receiver: { username: data.conversationId },
+              message: message,
+              time: data.time,
+            };
+            sql.createMessage(newMessage).then(() => {
+              sql.getGroupMembers(data.conversationId).then((members) => {
+                members.map((member) => {
+                  const user = usersList.find(
+                    (u) => u.username === member.username
+                  );
+                  if (user) io.to(user.id).emit("newMessage", newMessage);
+                });
+              });
+            });
+          }
+        );
+      } else if (data.message.type === "audio") {
+        const date = Date.now();
+        base64Data = data.message.data.split(";base64,").pop();
+        fs.writeFile(
+          `files/${date}.wav`,
+          base64Data,
+          { encoding: "base64" },
+          async (err) => {
+            if (err) console.log(err);
+            let message = {
+              ...data.message,
+              data: `http://localhost:5000/${date}.wav`,
+            };
+            const newMessage = {
+              id: data.id,
+              conversationId: data.conversationId,
+              sender: await sql.getUser(data.sender),
+              receiver: { username: data.conversationId },
+              message: message,
+              time: data.time,
+            };
+            sql.createMessage(newMessage).then(() => {
+              sql.getGroupMembers(data.conversationId).then((members) => {
+                members.map((member) => {
+                  const user = usersList.find(
+                    (u) => u.username === member.username
+                  );
+                  if (user) io.to(user.id).emit("newMessage", newMessage);
+                });
+              });
+            });
+          }
+        );
+      } else {
+        const newMessage = {
+          id: data.id,
+          conversationId: data.conversationId,
+          sender: await sql.getUser(data.sender),
+          receiver: { username: data.conversationId },
+          message: data.message,
+          time: data.time,
+        };
+        sql.createMessage(newMessage).then(() => {
+          sql.getGroupMembers(data.conversationId).then((members) => {
+            members.map((member) => {
+              const user = usersList.find(
+                (u) => u.username === member.username
+              );
+              if (user) io.to(user.id).emit("newMessage", newMessage);
+            });
+          });
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  });
+
+  socket.on("createGroup", (data) => {
+    const newGroup = {
+      id: shortid.generate(),
+      name: data.groupName,
+      image: data.groupImage,
+      members: data.members,
+      messages: [],
+      chatType: "group",
+    };
+    sql.createGroupChat(newGroup).then(() => {
+      data.members.forEach((member) => {
+        const user = usersList.find((u) => u.username === member.username);
+        if (user) io.to(user.id).emit("newGroup", newGroup);
+      });
+    });
+  });
+
+  socket.on("getChats", async (username) => {
+    const groupChats = await sql.getGroupChat(username);
+    const privateChats = await sql.getChats(username);
+    privateChats.forEach((chat) => {
+      chat.chatType = "private";
+    });
+    groupChats.forEach((chat) => {
+      chat.chatType = "group";
+    });
+    const chats = [...groupChats, ...privateChats];
+    io.to(id).emit("chats", chats);
+  });
+
+  socket.on("getChatInfo", ({ chatId, username }) => {
+    sql.getChat(chatId, username).then((chat) => {
+      io.to(id).emit("chatInfo", chat);
+    });
+  });
+
+  socket.on("addGroupMember", ({ groupId, username }) => {
+    sql
+      .addMemberToGroup({ groupId, username })
+      .then(() => {
+        sql
+          .getGroupChatById(groupId)
+          .then((group) => {
+            group.members.forEach((member) => {
+              const user = usersList.find(
+                (u) => u.username === member.username
+              );
+              if (user) io.to(user.id).emit("groupMemberAdded", group);
+            });
+          })
+          .catch((err) => console.log(err));
+      })
+      .catch((err) => console.log(err));
   });
 
   socket.on("disconnect", () => {
@@ -291,8 +425,14 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(process.env.PORT || 5000, process.env.IP, () =>
-  console.log(
-    `Server has started on ${process.env.IP} using port ${process.env.PORT}`
-  )
-);
+try {
+  server.listen(process.env.PORT || 5000, process.env.IP, () =>
+    console.log(
+      `Server has started on ${process.env.IP} using port ${process.env.PORT}`
+    )
+  );
+} catch (err) {
+  console.log(err);
+}
+
+

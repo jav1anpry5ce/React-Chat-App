@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { Form, Input } from "antd";
 
 export default function NameForm() {
-  const [userName, setUserName] = useState();
+  const [username, setUserName] = useState();
   const [name, setName] = useState();
   const [imageUrl, setImageUrl] = useState();
   const [form] = Form.useForm();
 
   const handleSubmit = async () => {
-    localStorage.setItem("username", userName);
+    localStorage.setItem("username", username);
     localStorage.setItem("name", name);
     if (imageUrl) localStorage.setItem("image", imageUrl);
     window.location.reload();

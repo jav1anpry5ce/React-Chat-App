@@ -4,7 +4,7 @@ import { ChatContext } from "../utils/ChatContext";
 import { AiOutlineClose } from "react-icons/ai";
 
 export default function Profile() {
-  const { image, name, userName, showProfile, setShowProfile, updateUser } =
+  const { user, showProfile, setShowProfile, updateUser } =
     useContext(ChatContext);
   const [nameInput, setNameInput] = useState();
   const [imageInput, setImageInput] = useState();
@@ -58,25 +58,29 @@ export default function Profile() {
           >
             <div
               className="inline-block h-[30rem] w-[22rem] transform overflow-hidden 
-                      rounded-lg bg-white text-left align-bottom shadow-xl transition-all
+                      rounded-lg bg-gray-900 text-left align-bottom text-white shadow-xl transition-all
                       sm:my-8 sm:w-full sm:max-w-[45rem] sm:align-middle"
             >
               <div className="flex h-full w-full flex-col items-center p-4">
                 <div className="flex flex-col items-center space-y-3 text-gray-700">
                   <img
-                    src={image}
-                    alt={name}
+                    src={user?.image}
+                    alt={user?.name}
                     className="aspect-square h-[7rem] w-[7rem] rounded-full object-cover"
                     draggable="false"
                   />
-                  <p className="text-lg font-semibold">Username: {userName}</p>
-                  <p className="text-lg font-semibold">Name: {name}</p>
+                  <p className="text-lg font-semibold text-white">
+                    Username: {user?.username}
+                  </p>
+                  <p className="text-lg font-semibold text-white">
+                    Name: {user?.name}
+                  </p>
                 </div>
                 <div className="flex h-full w-full flex-col items-center space-y-3">
                   <div className="w-full space-y-1">
                     <p>Name</p>
                     <input
-                      className="w-full rounded px-2 py-1 outline-none ring-1 ring-slate-600 focus-within:ring-blue-500"
+                      className="sm:text-md block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-gray-900 outline-none focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
                       value={nameInput}
                       onChange={(e) => setNameInput(e.target.value)}
                     />
@@ -84,7 +88,7 @@ export default function Profile() {
                   <div className="w-full space-y-1">
                     <p>Image</p>
                     <input
-                      className="w-full rounded px-2 py-1 outline-none ring-1 ring-slate-600 focus-within:ring-blue-500"
+                      className="sm:text-md block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-gray-900 outline-none focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
                       value={imageInput}
                       onChange={(e) => setImageInput(e.target.value)}
                     />

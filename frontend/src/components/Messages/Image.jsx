@@ -5,15 +5,16 @@ import Linkify from "react-linkify";
 import useContextMenu from "../../utils/useContextMenu";
 import ContextMenu from "../ContextMenu";
 
-export default function Image({ data, userName }) {
-  const { setViewing, setViewSrc } = useContext(ChatContext);
+export default function Image({ data, username }) {
+  const { setViewing, setViewSrc, user } = useContext(ChatContext);
   const { clicked, setClicked, points, setPoints } = useContextMenu();
-  const { userName: uname } = useContext(ChatContext);
 
   return (
     <div
       className={`${
-        data?.sender === userName ? "bg-blue-500/90" : "bg-slate-800/90"
+        data?.message?.text !== "" && data?.sender.username === username
+          ? "bg-blue-500/90"
+          : "bg-slate-800/90"
       } max-h-auto relative max-w-[20rem] rounded-md text-white md:max-w-[27rem]`}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -24,7 +25,7 @@ export default function Image({ data, userName }) {
         });
       }}
     >
-      {clicked && data?.sender === uname && (
+      {clicked && data?.sender.username === user?.username && (
         <ContextMenu
           top={points.y}
           left={points.x}
@@ -64,7 +65,7 @@ export default function Image({ data, userName }) {
       <p
         className={`absolute bottom-1 right-1 pr-1 text-right text-[0.75rem] ${
           !data?.message.text &&
-          "rounded-full bg-black/70 px-1.5 py-1 text-white"
+          "rounded-full bg-black/70 px-1.5 py-0.5 text-white backdrop-blur"
         }`}
       >
         {new Date(data?.time).toLocaleTimeString().replace(/(.*)\D\d+/, "$1")}

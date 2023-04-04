@@ -6,26 +6,18 @@ const shortid = require("shortid");
 
 const ChatContext = createContext();
 
-const socket = io("192.168.1.234:5000");
+const socket = io("http://localhost:5000");
 
 const ChatProvider = ({ children }) => {
   const [chats, setChats] = useState(
     JSON.parse(localStorage.getItem("chats")) || []
   );
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
   const [chatting, setChatting] = useState();
-  const userName = localStorage.getItem("username");
-  const [name, setName] = useState(localStorage.getItem("name"));
-  const [image, setImage] = useState(
-    localStorage.getItem("image") ||
-      "https://i1.sndcdn.com/avatars-000196113278-93p2dw-t500x500.jpg"
-  );
   const [show, setShow] = useState(false);
   const [conversationId, setConversationId] = useState();
   const [viewing, setViewing] = useState(false);
   const [viewSrc, setViewSrc] = useState(null);
-  const [convos, setConvos] = useState(
-    JSON.parse(localStorage.getItem("conversation")) || []
-  );
   const [showProfile, setShowProfile] = useState(false);
   const [stream, setStream] = useState();
   const [receivingCall, setReceivingCall] = useState(false);
@@ -38,6 +30,8 @@ const ChatProvider = ({ children }) => {
   const [hide, setHide] = useState(false);
   const [type, setType] = useState("");
   const [screenShare, setScreenShare] = useState(false);
+  const [createGroupChat, setCreateGroupChat] = useState(false);
+  const [group, setGroup] = useState(null);
 
   const myVideo = useRef();
   const userStream = useRef();
@@ -106,141 +100,135 @@ const ChatProvider = ({ children }) => {
   }, [calling, callAccepted, stream, type]);
 
   useEffect(() => {
-    const getChats = () => {
-      if (chats && chats.length > 0) {
-        chats.forEach((chat) => {
-          const data = {
-            sender: userName,
-            receiver: chat?.userName,
-          };
-          socket.emit("getMyChats", data);
-        });
-      }
-    };
-    const userChanged = () => {
-      if (chats && chats.length > 0) {
-        chats.forEach((chat) => {
-          socket.emit("userChanged", chat.userName);
-        });
-      }
-    };
-    if (!chats) {
-      localStorage.setItem("chats", JSON.stringify([]));
+    if (!chats) localStorage.setItem("chats", JSON.stringify([]));
+    socket.emit("userData", user);
+    if (user) {
+      socket.on("connect", () => {
+        socket.emit("userData", user);
+      });
     }
-    const data = {
-      name,
-      image,
-      userName,
-    };
-    getChats();
-    socket.on("connect", () => {
-      if (userName && name && image) socket.emit("userData", data);
-      getChats();
-      userChanged();
-    });
-  }, [userName, name, image, chats]);
+    return () => socket.off("connect");
+  }, [user, chats]);
 
   useEffect(() => {
     const swap = (data) => {
-      chats.forEach((item, i) => {
-        if (item.userName === data.receiver) {
-          chats.splice(i, 1);
-          chats.unshift(item);
-        } else if (item.userName === data.sender) {
-          chats.splice(i, 1);
-          chats.unshift(item);
-        }
+      return new Promise(async (resolve, reject) => {
+        const initialChats = JSON.parse(localStorage.getItem("chats"));
+        initialChats.forEach((item, i) => {
+          if (item.id === data.conversationId) {
+            initialChats.splice(i, 1);
+            initialChats.unshift(item);
+          } else if (item.id === data.conversationId) {
+            initialChats.splice(i, 1);
+            initialChats.unshift(item);
+          }
+        });
+        localStorage.setItem("chats", JSON.stringify(initialChats));
+        const chats = await setUnread(data);
+        resolve(chats);
       });
-      localStorage.setItem("chats", JSON.stringify(chats));
     };
     const setUnread = (data) => {
-      const chat = chats.find((u) => u.userName === data.sender);
-      if (chatting?.userName === chat?.userName) return;
-      if (chat) {
-        if (chat?.unread) chat.unread += 1;
-        else chat.unread = 1;
-        localStorage.setItem("chats", JSON.stringify(chats));
-      }
+      return new Promise((resolve, reject) => {
+        const chats = JSON.parse(localStorage.getItem("chats"));
+        const chat = chats.find((chat) => chat.id === data.conversationId);
+        if (chat) {
+          if (chatting?.id === chat?.id) resolve(chats);
+          else if (chat?.unread) chat.unread += 1;
+          else chat.unread = 1;
+          localStorage.setItem("chats", JSON.stringify(chats));
+        }
+        resolve(chats);
+      });
     };
-    localStorage.setItem("conversation", JSON.stringify([]));
-    socket.on("newMessage", (data) => {
-      const conversations = JSON.parse(localStorage.getItem("conversation"));
-      const conversation = conversations.find(
-        (con) => con.id === data.conversationId
-      );
-      if (conversation) {
-        swap(data);
-        setUnread(data);
-        const update = conversation.messages.concat(data);
-        const index = conversations.findIndex(
-          (con) => con.id === data.conversationId
-        );
-        conversations[index].messages = update;
-        setConvos(conversations);
-        localStorage.setItem("conversation", JSON.stringify(conversations));
+    socket.on("newMessage", async (data) => {
+      const chats = await swap(data);
+      const chat = chats.find((chat) => chat.id === data.conversationId);
+      if (chat) {
+        chat.messages.push(data);
+        chat.lastMessage = data.message;
+        localStorage.setItem("chats", JSON.stringify(chats));
+        setChats(chats);
       } else {
-        addUser(data.sender).then(() => {
-          swap(data);
-          setUnread(data);
+        socket.emit("getChatInfo", {
+          chatId: data.conversationId,
+          username: user?.username,
         });
       }
     });
-    socket.on("yourChats", (data) => {
-      const oldConversations = JSON.parse(localStorage.getItem("conversation"));
-      const conversation = data;
-      if (oldConversations) {
-        if (!oldConversations.find((con) => con.id === conversation[0].id)) {
-          const newConversation = oldConversations.concat(conversation[0]);
-          localStorage.setItem("conversation", JSON.stringify(newConversation));
-          setConvos(newConversation);
-        }
-      } else {
-        localStorage.setItem("conversation", JSON.stringify(conversation));
-        setConvos(conversation);
-      }
-    });
 
-    socket.on("stuffChanged", ({ user, name, image }) => {
-      console.log(user);
-      try {
-        const u = chats.find((u) => u.userName === user);
-        if (u) {
-          u.name = name;
-          u.image = image;
-          localStorage.setItem("chats", JSON.stringify(chats));
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    });
-
-    socket.on("userChanged", (data) => {
-      try {
-        const chat = chats.find((chat) => chat.userName === data.userName);
-        if (chat) {
-          chat.name = data.name;
-          chat.image = data.image;
-          localStorage.setItem("chats", JSON.stringify(chats));
-        }
-      } catch (err) {
-        console.error(err);
-      }
+    socket.on("chatInfo", (chat) => {
+      chat.unread = 1;
+      localStorage.setItem("chats", JSON.stringify([chat, ...chats]));
+      setChats([chat, ...chats]);
     });
 
     socket.on("messageDeleted", ({ messageID, conversationID }) => {
-      const conversations = JSON.parse(localStorage.getItem("conversation"));
-      const conversation = conversations.find(
-        (con) => con.id === conversationID
-      );
-      if (!conversation) return;
-      const message = conversation.messages.find((msg) => msg.id === messageID);
-      conversation.messages.splice(conversation.messages.indexOf(message), 1);
-      setConvos(conversations);
-      localStorage.setItem("conversation", JSON.stringify(conversations));
+      const chats = JSON.parse(localStorage.getItem("chats"));
+      const chat = chats.find((chat) => chat.id === conversationID);
+      if (!chat) return;
+      const message = chat.messages.find((msg) => msg.id === messageID);
+      if (!message) return;
+      message.message.wasUnsent = true;
+      message.message.text = null;
+      localStorage.setItem("chats", JSON.stringify(chats));
+      setChats(chats);
     });
 
-    socket.on("error", (err) => {
-      alert(err);
+    socket.on("error", ({ message }) => {
+      alert(message);
+    });
+
+    socket.on("newGroup", (data) => {
+      const chat = data;
+      const chats = JSON.parse(localStorage.getItem("chats"));
+      if (chats) {
+        if (!chats.find((chat) => chat.username === data.id)) {
+          setCreateGroupChat(false);
+          const newChats = chats.concat(chat);
+          localStorage.setItem("chats", JSON.stringify(newChats));
+          setChats(newChats);
+        }
+      }
+    });
+
+    socket.on("chats", (data) => {
+      const chats = JSON.parse(localStorage.getItem("chats"));
+      if (chats && chats.length === 0) {
+        localStorage.setItem("chats", JSON.stringify(data));
+        setChats(data);
+        return;
+      } else {
+        data.forEach((chat) => {
+          const c = chats?.find((c) => c.id === chat.id);
+          if (c) {
+            c.unread += chat.messages.length - c.messages.length;
+            c.messages = chat.messages;
+            c.name = chat.name;
+            c.image = chat.image;
+            c.chatType = chat.chatType;
+            if (c?.members) c.members = chat.members;
+          } else {
+            chats.push(chat);
+          }
+        });
+        localStorage.setItem("chats", JSON.stringify(chats));
+        setChats(chats);
+      }
+    });
+
+    socket.on("groupMemberAdded", (data) => {
+      const chats = JSON.parse(localStorage.getItem("chats"));
+      const chat = chats.find((chat) => chat.id === data.id);
+      if (!chat) {
+        chats.push(data);
+        localStorage.setItem("chats", JSON.stringify(chats));
+        setChats(chats);
+        return;
+      }
+      chat.members = data.members;
+      localStorage.setItem("chats", JSON.stringify(chats));
+      setChats(chats);
     });
 
     return () => {
@@ -249,16 +237,32 @@ const ChatProvider = ({ children }) => {
       socket.off("userChanged");
       socket.off("messageDeleted");
       socket.off("error");
+      socket.off("newGroup");
+      socket.off("groups");
+      socket.off("chats");
+      socket.off("groupMemberAdded");
     };
     // eslint-disable-next-line
-  }, []);
+  }, [chatting]);
+
+  useEffect(() => {
+    socket.emit("getChats", user?.username);
+  }, [user]);
 
   useEffect(() => {
     socket.on("userAdded", (data) => {
-      if (data.userName !== userName) {
-        const chat = chats.find((u) => u.userName === data.userName);
-        if (!chat) {
-          setChats((chats) => [...chats, data]);
+      if (data.username !== user?.username) {
+        const chats = JSON.parse(localStorage.getItem("chats"));
+        if (chats.length === 0) {
+          localStorage.setItem("chats", JSON.stringify([data]));
+          setChats([data]);
+        } else {
+          const chat = chats.find((chat) => chat.id === data.id);
+          if (!chat) {
+            chats.push(data);
+            localStorage.setItem("chats", JSON.stringify(chats));
+            setChats(chats);
+          }
         }
       }
     });
@@ -266,41 +270,46 @@ const ChatProvider = ({ children }) => {
       alert("User not found!");
     });
     socket.on("updated", ({ name, image }) => {
-      setName(name);
-      localStorage.setItem("name", name);
-      setImage(image);
-      localStorage.setItem("image", image);
+      const user = JSON.parse(localStorage.getItem("user"));
+      user.name = name;
+      user.image = image;
+      localStorage.setItem("user", JSON.stringify(user));
       chats.forEach((chat) => {
         socket.emit("stuffChanged", {
-          user: chat.userName,
-          me: userName,
+          user: chat.username,
+          me: user?.username,
           name,
           image,
         });
       });
     });
 
-    if (chats.length > 0) {
-      // localStorage.setItem("chats", JSON.stringify(chats));
-      setInterval(() => {
-        chats.forEach((chat) => {
-          socket.emit("online", chat.userName);
-        });
-      }, 100);
-    }
     return () => {
       socket.off("userAdded");
       socket.off("notFound");
-      socket.off("online");
       socket.off("updated");
     };
-  }, [userName, chats]);
+  }, [user, chats]);
 
-  const setZero = (userName) => {
-    const chat = chats.find((u) => u.userName === userName);
+  useEffect(() => {
+    let interval = null;
+    if (chatting !== null && chatting?.chatType === "private") {
+      interval = setInterval(() => {
+        socket.emit("online", chatting.username);
+      }, 2000);
+    }
+    return () => {
+      clearInterval(interval);
+    };
+  }, [chatting]);
+
+  const setZero = (id) => {
+    const chats = JSON.parse(localStorage.getItem("chats"));
+    const chat = chats.find((chat) => chat.id === id);
     if (chat) {
       chat.unread = 0;
       localStorage.setItem("chats", JSON.stringify(chats));
+      setChats(chats);
     }
   };
 
@@ -312,8 +321,8 @@ const ChatProvider = ({ children }) => {
         const data = {
           id: id,
           conversationId: messageData.conversationId,
-          sender: userName,
-          receiver: chatting?.userName,
+          sender: user?.username,
+          receiver: chatting?.username,
           message: {
             id: id,
             type: "audio",
@@ -321,7 +330,9 @@ const ChatProvider = ({ children }) => {
           },
           time: Date.now(),
         };
-        socket.emit("chat", data);
+        if (messageData.chatType === "group")
+          socket.emit("sendGroupMessage", data);
+        else socket.emit("chat", data);
         return resolve("Success");
       } else if (messageData.file) {
         const id = shortid.generate();
@@ -332,8 +343,8 @@ const ChatProvider = ({ children }) => {
           const data = {
             id: id,
             conversationId: messageData.conversationId,
-            sender: userName,
-            receiver: chatting?.userName,
+            sender: user?.username,
+            receiver: chatting?.username,
             message: {
               id: id,
               type: messageData.file.type.split("/")[0],
@@ -343,7 +354,9 @@ const ChatProvider = ({ children }) => {
             },
             time: Date.now(),
           };
-          socket.emit("chat", data);
+          if (messageData.chatType === "group")
+            socket.emit("sendGroupMessage", data);
+          else socket.emit("chat", data);
           return resolve("Success");
         };
       } else {
@@ -351,8 +364,8 @@ const ChatProvider = ({ children }) => {
         const data = {
           id: id,
           conversationId: messageData.conversationId,
-          sender: userName,
-          receiver: chatting?.userName,
+          sender: user?.username,
+          receiver: chatting?.username,
           message: {
             id: id,
             type: "text",
@@ -360,15 +373,17 @@ const ChatProvider = ({ children }) => {
           },
           time: Date.now(),
         };
-        socket.emit("chat", data);
+        if (messageData.chatType === "group")
+          socket.emit("sendGroupMessage", data);
+        else socket.emit("chat", data);
         return resolve("Success");
       }
     });
   };
 
-  const addUser = (user) => {
+  const addUser = (userToAdd) => {
     return new Promise((resolve) => {
-      socket.emit("addingUser", user);
+      socket.emit("addingUser", { userToAdd, user: user?.username });
       return resolve("success");
     });
   };
@@ -376,9 +391,9 @@ const ChatProvider = ({ children }) => {
   const updateUser = (newName, newImage) => {
     if (newName || newImage) {
       socket.emit("updateMe", {
-        userName,
-        name: newName ? newName : name,
-        image: newImage ? newImage : image,
+        username: user?.username,
+        name: newName ? newName : user?.name,
+        image: newImage ? newImage : user?.image,
       });
     }
   };
@@ -400,14 +415,14 @@ const ChatProvider = ({ children }) => {
           });
           peer.on("signal", (data) => {
             const callData = {
-              userToCall: chatting.userName,
+              userToCall: chatting.username,
               userToCallName: chatting.name,
               userToCallImage: chatting.image,
               signalData: data,
               type,
-              from: userName,
-              name: name,
-              image: image,
+              from: user?.username,
+              name: user?.name,
+              image: user?.image,
             };
             socket.emit("callUser", callData);
             setCalling(callData);
@@ -537,32 +552,45 @@ const ChatProvider = ({ children }) => {
     setCurrentTime(userStream.current.currentTime);
   };
 
-  const removeUser = (user) => {
-    if (chatting && chatting.userName === user) setChatting(null);
-    const newChats = chats.filter((chat) => chat.userName !== user);
-    const conversation = convos.find(
-      (con) => con.users.includes(user) && con.users.includes(userName)
-    );
-    const newConvos = convos.filter((con) => con.id !== conversation.id);
-    setChats(newChats);
-    setConvos(newConvos);
-    localStorage.setItem("conversation", JSON.stringify(newConvos));
+  const removeUser = (chatId) => {
+    if (chatting && chatting.id === chatId) setChatting(null);
+    const chats = JSON.parse(localStorage.getItem("chats"));
+    const newChats = chats.filter((chat) => chat.id !== chatId);
     localStorage.setItem("chats", JSON.stringify(newChats));
+    setChats(newChats);
   };
 
   const deleteMessage = (messageID, conversationID) => {
-    socket.emit("deleteMessage", { messageID, conversationID, userName });
+    socket.emit("deleteMessage", {
+      messageID,
+      conversationID,
+      username: user?.username,
+    });
+  };
+
+  const createGroup = (groupData) => {
+    const admin = {
+      username: user?.username,
+      name: user?.name,
+      image: user?.image,
+      admin: 1,
+    };
+    groupData.members.push(admin);
+    socket.emit("createGroup", groupData);
+  };
+
+  const addGroupMember = (data) => {
+    socket.emit("addGroupMember", data);
   };
 
   const value = {
+    user,
     chats,
     setChats,
     chatting,
     setChatting,
-    userName,
-    name,
-    image,
     show,
+    setUser,
     setShow,
     sendMessage,
     socket,
@@ -573,7 +601,6 @@ const ChatProvider = ({ children }) => {
     viewSrc,
     setViewSrc,
     addUser,
-    convos,
     showProfile,
     setShowProfile,
     updateUser,
@@ -601,6 +628,12 @@ const ChatProvider = ({ children }) => {
     setZero,
     removeUser,
     deleteMessage,
+    createGroup,
+    createGroupChat,
+    setCreateGroupChat,
+    group,
+    setGroup,
+    addGroupMember,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

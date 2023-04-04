@@ -8,8 +8,7 @@ import { ChatContext } from "../utils/ChatContext";
 import { motion } from "framer-motion";
 
 export default function ChatBottom() {
-  const { socket, chatting, userName, sendMessage, conversationId } =
-    useContext(ChatContext);
+  const { socket, chatting, user, sendMessage } = useContext(ChatContext);
   const [text, setText] = useState("");
   const [file, setFile] = useState(null);
   let [isRecording, startRecording, stopRecording, audio, cancelRecording] =
@@ -20,7 +19,8 @@ export default function ChatBottom() {
     if (audio) {
       const data = {
         audio,
-        conversationId,
+        conversationId: chatting.id,
+        chatType: chatting.chatType,
       };
       sendMessage(data);
     }
@@ -31,8 +31,9 @@ export default function ChatBottom() {
     if (file) {
       const data = {
         file,
-        conversationId,
+        conversationId: chatting.id,
         text,
+        chatType: chatting.chatType,
       };
       sendMessage(data).then(() => {
         setFile(null);
@@ -41,8 +42,9 @@ export default function ChatBottom() {
       });
     } else {
       const data = {
-        conversationId,
+        conversationId: chatting.id,
         text,
+        chatType: chatting.chatType,
       };
       sendMessage(data).then(() => {
         setText("");
@@ -58,8 +60,8 @@ export default function ChatBottom() {
     if (input) {
       input.addEventListener("keydown", (event) => {
         socket.emit("typing", {
-          userName: chatting?.userName,
-          typing: userName,
+          username: chatting?.username,
+          typing: user?.username,
         });
         if (event.code === "Enter") {
           event.preventDefault();

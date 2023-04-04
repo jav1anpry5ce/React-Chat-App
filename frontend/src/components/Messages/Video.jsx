@@ -3,13 +3,15 @@ import { ChatContext } from "../../utils/ChatContext";
 import useContextMenu from "../../utils/useContextMenu";
 import ContextMenu from "../ContextMenu";
 
-export default function Video({ data, userName }) {
+export default function Video({ data, username }) {
   const { clicked, setClicked, points, setPoints } = useContextMenu();
-  const { userName: uname } = useContext(ChatContext);
+  const { user } = useContext(ChatContext);
   return (
     <div
       className={`${
-        data?.sender === userName ? "bg-blue-500/90" : "bg-slate-800/90"
+        data?.sender.username === username
+          ? "bg-blue-500/90"
+          : "bg-slate-800/90"
       } max-h-auto relative aspect-auto max-w-[17rem] rounded-md text-white md:max-w-[35rem]`}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -20,7 +22,7 @@ export default function Video({ data, userName }) {
         });
       }}
     >
-      {clicked && data?.sender === uname && (
+      {clicked && data?.sender.username === user?.username && (
         <ContextMenu
           top={points.y}
           left={points.x}

@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import ChatItem from "./ChatItem";
 import ProfileCard from "./ProfileCard";
 import { ChatContext } from "../utils/ChatContext";
@@ -43,7 +43,7 @@ export default function ChatList() {
       <motion.ul layout className="grid grid-cols-1 gap-0">
         <AnimatePresence>
           {chatList?.map((chat) => (
-            <ChatItem chat={chat} key={chat.userName} />
+            <ChatItem key={chat.id} chat={chat} />
           ))}
         </AnimatePresence>
       </motion.ul>

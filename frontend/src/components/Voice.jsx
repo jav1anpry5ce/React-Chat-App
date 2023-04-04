@@ -6,9 +6,9 @@ import useContextMenu from "../utils/useContextMenu";
 import ContextMenu from "./ContextMenu";
 const format = require("format-duration");
 
-export default function Voice({ src, time, sender, userName, data }) {
+export default function Voice({ src, time, sender, username, data }) {
   const { clicked, setClicked, points, setPoints } = useContextMenu();
-  const { userName: uname } = useContext(ChatContext);
+  const { user } = useContext(ChatContext);
   const audioPlayer = useRef();
   const [currentTime, setCurrentTime] = useState(0);
   const [seekValue, setSeekValue] = useState(0);
@@ -62,7 +62,7 @@ export default function Voice({ src, time, sender, userName, data }) {
   return (
     <div
       className={`${
-        sender === userName ? "bg-blue-500/90" : "bg-slate-800/90"
+        sender === username ? "bg-blue-500/90" : "bg-slate-800/90"
       } min-w-[17rem] rounded-full px-3 py-1`}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -73,7 +73,7 @@ export default function Voice({ src, time, sender, userName, data }) {
         });
       }}
     >
-      {clicked && data?.sender === uname && (
+      {clicked && data?.sender === user?.username && (
         <ContextMenu
           top={points.y}
           left={points.x}

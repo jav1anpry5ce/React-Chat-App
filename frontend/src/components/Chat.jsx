@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, Fragment } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import ChatBottom from "./ChatBottom";
 import ChatHead from "./ChatHead";
 import Message from "./Message";
@@ -10,20 +10,20 @@ import { isToday, isYesterday } from "date-fns";
 import { Transition } from "@headlessui/react";
 import { motion } from "framer-motion";
 
-function showNotification(head, body) {
-  if (body.type === "text") {
-    new Notification(head, {
-      body: body.text,
-      silent: true,
-    });
-  } else {
-    new Notification(head, {
-      body: body.type,
-      data: body.text,
-      silent: true,
-    });
-  }
-}
+// function showNotification(head, body) {
+//   if (body.type === "text") {
+//     new Notification(head, {
+//       body: body.text,
+//       silent: true,
+//     });
+//   } else {
+//     new Notification(head, {
+//       body: body.type,
+//       data: body.text,
+//       silent: true,
+//     });
+//   }
+// }
 
 function scrollToBottom() {
   const s = document.getElementById("scroll");
@@ -34,65 +34,39 @@ function scrollToBottom() {
 }
 
 export default function Chat({ audio }) {
-  const {
-    socket,
-    chatting,
-    userName,
-    setShow,
-    chats,
-    convos,
-    hide,
-    setChatting,
-    setConversationId,
-  } = useContext(ChatContext);
+  const { socket, chatting, user, setShow, chats, hide, setChatting } =
+    useContext(ChatContext);
   const [typing, setTyping] = useState(false);
   const [bottom, setBottom] = useState(true);
-  const [messages, setMessages] = useState([]);
+  const [chat, setChat] = useState({});
 
   useEffect(() => {
-    if (userName && convos && chatting) {
-      const conversation = convos.find(
-        (conversation) =>
-          conversation.users?.includes(userName) &&
-          conversation.users?.includes(chatting.userName)
-      );
-      if (conversation) {
-        setMessages(conversation?.messages);
-        setConversationId(conversation?.id);
-      }
-    }
-    // eslint-disable-next-line
-  }, [convos, chatting, userName]);
-
-  useEffect(() => {
-    socket.on("newMessage", (data) => {
+    const chat = chats?.find((chat) => chat?.id === chatting?.id);
+    if (chat) {
+      setChat(chat);
       setTimeout(() => {
         scrollToBottom();
-      }, 300);
-      if (data) {
-        setTyping(false);
-        if (data.receiver === userName) {
-          const name = chats.find(
-            (user) => user?.userName === data.sender
-          )?.name;
-          showNotification(
-            `New message from ${name ? name : data.sender}`,
-            data.message
-          );
-          if (audio.paused || audio.currentTime > 0) {
-            audio.currentTime = 0;
-            audio.volume = 0.045;
-            audio.play();
-          } else {
-            audio.volume = 0.045;
-            audio.play();
-          }
-        }
-      }
-    });
-    return () => socket.off("newMessage");
+      }, 100);
+      setTyping(false);
+      // const lastMessage = chat.messages.at(-1);
+      // if (lastMessage.receiver === username) {
+      //   const name = chats.find((c) => c?.id === chat.id)?.name;
+      //   showNotification(
+      //     `New message from ${name ? name : lastMessage.sender}`,
+      //     lastMessage.message
+      //   );
+      //   if (audio.paused || audio.currentTime > 0) {
+      //     audio.currentTime = 0;
+      //     audio.volume = 0.045;
+      //     audio.play();
+      //   } else {
+      //     audio.volume = 0.045;
+      //     audio.play();
+      //   }
+      // }
+    }
     // eslint-disable-next-line
-  }, []);
+  }, [chats, chatting]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -101,15 +75,10 @@ export default function Chat({ audio }) {
   }, [typing]);
 
   useEffect(() => {
+    var listener;
+    const s = document.getElementById("scroll");
     if (chatting) {
-      const s = document.getElementById("scroll");
-      setTimeout(() => {
-        scrollToBottom();
-      }, 700);
-      setTimeout(() => {
-        scrollToBottom();
-      }, 200);
-      s.addEventListener("scroll", (e) => {
+      listener = s.addEventListener("scroll", (e) => {
         const bottom =
           Math.round(e.target.scrollTop + e.target.clientHeight) >
           e.target.scrollHeight - 200;
@@ -118,20 +87,49 @@ export default function Chat({ audio }) {
     }
     socket.on("usertyping", (data) => {
       if (chatting) {
-        if (data.typing === chatting.userName) {
+        if (data.typing === chatting.username) {
           if (!typing) setTyping(true);
         } else {
           if (typing) setTyping(false);
         }
       }
     });
-    return () => socket.off("usertyping");
+    // socket.on("newMessage", (data) => {
+    //   if (chatting) {
+    //     if (
+    //       chatting.username === data.sender.username ||
+    //       data.sender.username === username
+    //     ) {
+    //       setTimeout(() => {
+    //         scrollToBottom();
+    //       }, 100);
+    //     }
+    //     if (data.sender.username === chatting.username) {
+    //       setTyping(false);
+    //     }
+    //     if (data.receiver.username === username) {
+    //       if (audio.paused || audio.currentTime > 0) {
+    //         audio.currentTime = 0;
+    //         audio.volume = 0.045;
+    //         audio.play();
+    //       } else {
+    //         audio.volume = 0.045;
+    //         audio.play();
+    //       }
+    //     }
+    //   }
+    // });
+    return () => {
+      socket.off("usertyping");
+      // socket.off("newMessage");
+      if (listener) s.removeEventListener("scroll", listener);
+    };
     // eslint-disable-next-line
   }, [chatting, typing]);
 
   useEffect(() => {
     const chatting = window.location.search.split("?")[1];
-    const chat = chats.find((u) => u.userName === chatting);
+    const chat = chats?.find((u) => u.id === chatting);
     if (chat) {
       setTimeout(() => {
         setChatting(chat);
@@ -166,10 +164,12 @@ export default function Chat({ audio }) {
               id="scroll"
             >
               <ul className="space-y-2 px-4 py-3">
-                {messages?.map((item, index) => (
+                {chat?.messages?.map((item, index) => (
                   <li key={index}>
                     {new Date(item.time).toDateString() !==
-                      new Date(messages[index - 1]?.time).toDateString() && (
+                      new Date(
+                        chat?.messages[index - 1]?.time
+                      ).toDateString() && (
                       <div className="top-1 z-50 flex w-full justify-center pb-3 md:sticky">
                         <p className="rounded-full bg-slate-800 px-6 text-center text-white">
                           {isToday(new Date(item.time)) ? (
@@ -182,15 +182,19 @@ export default function Chat({ audio }) {
                         </p>
                       </div>
                     )}
-                    <Message data={item} userName={userName} />
+                    <Message
+                      data={item}
+                      username={user?.username}
+                      chat={chat}
+                    />
                   </li>
                 ))}
               </ul>
               <Transition
                 show={!bottom}
-                className="animate-slideIn fixed 
-              right-3 bottom-[4.5rem] flex h-9
-              w-9 cursor-pointer items-center justify-center rounded-full bg-slate-700/80 text-white hover:bg-slate-600/80"
+                className="fixed right-3 
+              bottom-[4.5rem] flex h-9 w-9
+              animate-slideIn cursor-pointer items-center justify-center rounded-full bg-slate-700/80 text-white hover:bg-slate-600/80"
                 leave="transition transform duration-700"
                 leaveFrom="translate-y-0"
                 leaveTo="translate-y-[300%]"

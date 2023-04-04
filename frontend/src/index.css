@@ -45,3 +45,25 @@ input[type="range"]::-webkit-slider-thumb {
   scrollbar-color: #ffffff transparent;
   scrollbar-width: thin;
 }
+
+.message-clip-receiver {
+  display: inline-block;
+  position: relative;
+  background: rgb(107 114 128 / 0.4);
+  box-sizing: border-box;
+  clip-path: polygon(9.39% 27.7%, 4.39% 10.85%, 15.58% 16.43%, 94.75% 16.43%, 94.75% 85.75%, 9.39% 85.75%);
+}
+
+
+.message-clip-sender {
+  display: inline-block;
+  position: relative;
+  background: rgb(107 114 128 / 0.4);
+  box-sizing: border-box;
+  clip-path: polygon(0% 18.06%, 81.32% 18.06%, 95.75% 13.33%, 87.75% 29.24%, 87.75% 86%, 0% 86%);
+}
+
+.stylish-text {
+  background-clip: text;
+  color: transparent;
+}

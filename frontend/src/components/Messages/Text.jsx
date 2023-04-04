@@ -14,9 +14,9 @@ function downloadFile(file, name) {
   downloadLink.click();
 }
 
-export default function Text({ data, userName }) {
+export default function Text({ data, username }) {
   const { clicked, setClicked, points, setPoints } = useContextMenu();
-  const { userName: uname } = useContext(ChatContext);
+  const { user } = useContext(ChatContext);
   return (
     <div
       onContextMenu={(e) => {
@@ -28,7 +28,7 @@ export default function Text({ data, userName }) {
         });
       }}
     >
-      {clicked && data?.sender === uname && (
+      {clicked && data?.sender.username === user?.username && (
         <ContextMenu
           top={points.y}
           left={points.x}
@@ -39,7 +39,9 @@ export default function Text({ data, userName }) {
       {data?.message.file ? (
         <div
           className={`max-w-[15rem] break-words md:max-w-lg ${
-            data?.sender === userName ? "bg-blue-500/90" : "bg-slate-800/90"
+            data?.sender.username === username
+              ? "bg-blue-500/90"
+              : "bg-slate-800/90"
           } rounded  text-white`}
         >
           <div
@@ -49,7 +51,7 @@ export default function Text({ data, userName }) {
                } ${
               data?.message.text
                 ? "bg-slate-700"
-                : data?.sender === userName
+                : data?.sender === username
                 ? "bg-blue-500/90"
                 : "bg-slate-800/90"
             }`}
@@ -91,7 +93,7 @@ export default function Text({ data, userName }) {
           className={`
         ${
           data?.message.type === "text"
-            ? data?.sender === userName
+            ? data?.sender.username === username
               ? "bg-blue-500/90 text-white"
               : "bg-slate-800/90 text-white"
             : "bg-transparent"
