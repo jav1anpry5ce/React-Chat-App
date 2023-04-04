@@ -129,7 +129,7 @@ export default function ViewGroupInfo() {
       variants={variants}
       initial={group ? "visible" : "hidden"}
       animate={group ? "visible" : "hidden"}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.1 }}
       className="absolute inset-0 flex items-center justify-center bg-black/50 text-white backdrop-blur"
     >
       <form

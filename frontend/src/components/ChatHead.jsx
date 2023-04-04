@@ -7,9 +7,10 @@ import { ChatContext } from "../utils/ChatContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ChatHead({ typing }) {
-  const { chatting, setShow, setChatting, callUser, socket, setGroup } =
+  const { chatting, setShow, setChatting, callUser, socket, setGroup, chats } =
     useContext(ChatContext);
   const [online, setOnline] = useState(false);
+  const [chat, setChat] = useState();
 
   useEffect(() => {
     setOnline(false);
@@ -21,6 +22,11 @@ export default function ChatHead({ typing }) {
     return () => socket.off("online");
     // eslint-disable-next-line
   }, [chatting]);
+
+  useEffect(() => {
+    const chat = chats.find((chat) => chat.id === chatting?.id);
+    setChat(chat);
+  }, [chats, chatting]);
 
   const viewGroup = () => {
     if (chatting.chatType === "group") setGroup(chatting);
@@ -50,7 +56,7 @@ export default function ChatHead({ typing }) {
             }}
           />
           <img
-            src={chatting?.image}
+            src={chat?.image}
             alt="profile"
             className="aspect-square h-[2.3rem] w-[2.3rem] rounded-full object-cover object-center transition duration-300 group-hover:opacity-70 md:h-[3.2rem] md:w-[3.2rem]"
             aria-label="image"
@@ -60,7 +66,7 @@ export default function ChatHead({ typing }) {
         </div>
         <div>
           <p className="font-semibold text-white transition duration-300 group-hover:text-gray-400">
-            {chatting?.name}
+            {chat?.name}
           </p>
           <AnimatePresence>
             {typing && online && (
@@ -88,7 +94,7 @@ export default function ChatHead({ typing }) {
           </AnimatePresence>
         </div>
       </div>
-      {chatting.chatType !== "group" && (
+      {chat?.chatType !== "group" && (
         <div className="flex items-center space-x-6 pr-4">
           <MdCall
             className="h-6 w-6 cursor-pointer hover:text-gray-300"

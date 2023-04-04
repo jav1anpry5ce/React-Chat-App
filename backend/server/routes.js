@@ -23,7 +23,7 @@ router.post("/signup", (req, res) => {
 router.post("/login", (req, res) => {
   const { username, password } = req.body;
   sql
-    .getUser(username)
+    .login(username)
     .then((user) => {
       bcrypt.compare(password, user.password, function (err, result) {
         if (err) return res.send({ password: err.message });

@@ -56,7 +56,7 @@ const createUser = (data) => {
 };
 
 const getUser = (username) => {
-  const sql = `SELECT * FROM users WHERE username = '${username}'`;
+  const sql = `SELECT username, name, image FROM users WHERE username = '${username}'`;
   return new Promise((resolve, reject) => {
     try {
       con.query(sql, (err, result) => {
@@ -465,17 +465,24 @@ const updateGroupChat = (data) => {
         return await addMemberToGroup({
           groupId: data.id,
           username: member.username,
+        }).catch((err) => {
+          return reject(err);
         });
       });
-      // data.members.forEach(async (member) => {
-      //   await addMemberToGroup({
-      //     groupId: data.id,
-      //     username: member.username,
-      //   });
-      // });
       await Promise.all(promises);
       const group = await getGroupChatById(data.id);
       resolve(group);
+    });
+  });
+};
+
+const login = (username) => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT * FROM users WHERE username = '${username}'`;
+    con.query(sql, (err, result) => {
+      if (err) return reject(err);
+      if (result.length === 0) return reject("User not found");
+      return resolve(result[0]);
     });
   });
 };
@@ -502,4 +509,5 @@ module.exports = {
   createUser,
   get_or_create_token,
   updateGroupChat,
+  login,
 };

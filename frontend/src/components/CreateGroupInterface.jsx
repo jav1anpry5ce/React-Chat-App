@@ -65,6 +65,7 @@ export default function CreateGroupInterface() {
       variants={variants}
       initial={createGroupChat ? "visible" : "hidden"}
       animate={createGroupChat ? "visible" : "hidden"}
+      transition={{ duration: 0.15 }}
       className="absolute inset-0 z-[60] bg-black/60 backdrop-blur"
     >
       <div className="flex h-full w-full items-center justify-center">
