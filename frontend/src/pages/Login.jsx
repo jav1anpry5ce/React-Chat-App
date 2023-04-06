@@ -38,12 +38,12 @@ export default function Login() {
         localStorage.setItem("user", JSON.stringify(user));
         setUser(user);
         navigate("/");
+        setLoading(false);
       })
       .catch((err) => {
         setError(err.response.data);
         setLoading(false);
       });
-    setLoading(false);
   };
   if (user) return <Navigate to="/" />;
   return (
@@ -69,8 +69,9 @@ export default function Login() {
             <p className="ml-1 text-sm text-red-400">{error.message}</p>
           )}
           <button
+            disabled={loading}
             type="submit"
-            className="inline-flex w-full items-center justify-center gap-2 rounded bg-gradient-to-r from-violet-500 to-fuchsia-500 p-2 font-serif font-bold shadow-none shadow-fuchsia-500/50 hover:from-fuchsia-500 hover:to-violet-500 hover:shadow-lg"
+            className="inline-flex w-full items-center justify-center gap-2 rounded bg-gradient-to-r from-violet-500 to-fuchsia-500 p-2 font-serif font-bold shadow-none shadow-fuchsia-500/50 hover:from-fuchsia-500 hover:to-violet-500 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
           >
             <p>Login</p>
             {loading && (

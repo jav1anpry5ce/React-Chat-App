@@ -15,10 +15,6 @@ const openConnection = () => {
   });
 };
 
-const closeConnection = () => {
-  con.end();
-};
-
 openConnection();
 
 const get_or_create_user = (data) => {

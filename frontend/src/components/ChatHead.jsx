@@ -37,10 +37,7 @@ export default function ChatHead({ typing }) {
       layout
       className="flex select-none items-center space-x-3 bg-slate-600/70 px-2 py-0.5 text-white backdrop-blur-md dark:bg-slate-800"
     >
-      <div
-        className="group flex grow items-center space-x-3 hover:cursor-pointer"
-        onClick={viewGroup}
-      >
+      <div className="group flex grow items-center space-x-3">
         <div className="flex items-center space-x-2">
           <AiOutlineMenuUnfold
             className="block h-8 w-8 md:hidden"
@@ -58,14 +55,14 @@ export default function ChatHead({ typing }) {
           <img
             src={chat?.image}
             alt="profile"
-            className="aspect-square h-[2.3rem] w-[2.3rem] rounded-full object-cover object-center transition duration-300 group-hover:opacity-70 md:h-[3.2rem] md:w-[3.2rem]"
+            className="aspect-square h-[2.3rem] w-[2.3rem] rounded-full object-cover object-center transition duration-300 md:h-[3.2rem] md:w-[3.2rem]"
             aria-label="image"
             draggable="false"
             loading="lazy"
           />
         </div>
-        <div>
-          <p className="font-semibold text-white transition duration-300 group-hover:text-gray-400">
+        <div onClick={viewGroup} className="cursor-pointer">
+          <p className="font-semibold text-white transition duration-300 hover:text-gray-400">
             {chat?.name}
           </p>
           <AnimatePresence>

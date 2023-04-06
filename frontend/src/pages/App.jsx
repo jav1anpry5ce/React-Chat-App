@@ -7,6 +7,7 @@ import {
   ReturnCall,
   CreateGroupInterface,
   ViewGroupInfo,
+  Notifications,
 } from "../components";
 import noti from "../assets/noti.wav";
 import { Transition } from "@headlessui/react";
@@ -55,6 +56,7 @@ function App() {
         <ReturnCall />
         <CreateGroupInterface />
         <ViewGroupInfo />
+        <Notifications />
         <div className="relative mx-auto flex-1">
           <div
             className={`scroll absolute left-0 h-full overflow-y-auto bg-slate-800/70 ${

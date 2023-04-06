@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import Peer from "simple-peer";
+import noti from "../assets/noti.wav";
 const shortid = require("shortid");
 // const ip = "https://backend.javaughnpryce.live:5001";
 
@@ -32,6 +33,8 @@ const ChatProvider = ({ children }) => {
   const [screenShare, setScreenShare] = useState(false);
   const [createGroupChat, setCreateGroupChat] = useState(false);
   const [group, setGroup] = useState(null);
+  const [audio] = useState(new Audio(noti));
+  const [notifications, setNotifications] = useState([]);
 
   const myVideo = useRef();
   const userStream = useRef();
@@ -101,8 +104,8 @@ const ChatProvider = ({ children }) => {
 
   useEffect(() => {
     if (!chats) localStorage.setItem("chats", JSON.stringify([]));
-    socket.emit("userData", user);
     if (user) {
+      socket.emit("userData", user);
       socket.on("connect", () => {
         socket.emit("userData", user);
       });
@@ -155,6 +158,7 @@ const ChatProvider = ({ children }) => {
           username: user?.username,
         });
       }
+      notifyUser(data);
     });
 
     socket.on("chatInfo", (chat) => {
@@ -593,6 +597,44 @@ const ChatProvider = ({ children }) => {
     socket.emit("changeGroup", data);
   };
 
+  const notifyUser = (data) => {
+    if (data?.sender?.username === user?.username) return;
+    if (data.conversationId === chatting?.id) return;
+    audio.currentTime = 0;
+    audio.volume = 0.045;
+    const chats = JSON.parse(localStorage.getItem("chats"));
+    const chat = chats.find((chat) => chat.id === data.conversationId);
+    if (chat && chat.chatType === "group") {
+      const notification = {
+        id: data?.id,
+        title: `New message from ${chat?.name}`,
+        image: chat?.image,
+        data,
+        group: true,
+      };
+      setNotifications((prev) => [...prev, notification]);
+      setTimeout(() => {
+        setNotifications((prev) =>
+          prev.filter((n) => n.id !== notification.id)
+        );
+      }, 5000);
+    } else {
+      const notification = {
+        id: data?.id,
+        title: `New message from ${data?.sender?.name}`,
+        image: data?.sender?.image,
+        data,
+      };
+      setNotifications((prev) => [...prev, notification]);
+      setTimeout(() => {
+        setNotifications((prev) =>
+          prev.filter((n) => n.id !== notification.id)
+        );
+      }, 5000);
+    }
+    audio.play();
+  };
+
   const value = {
     user,
     chats,
@@ -645,6 +687,8 @@ const ChatProvider = ({ children }) => {
     setGroup,
     addGroupMember,
     changeGroup,
+    notifications,
+    audio,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

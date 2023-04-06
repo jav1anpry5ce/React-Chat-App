@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Mar 30, 2023 at 11:22 PM
+-- Generation Time: Apr 06, 2023 at 06:34 PM
 -- Server version: 10.4.27-MariaDB
 -- PHP Version: 8.2.0
 
@@ -41,7 +41,7 @@ CREATE TABLE `conversations` (
 CREATE TABLE `groups` (
   `id` varchar(25) NOT NULL,
   `name` varchar(100) NOT NULL,
-  `image` longtext NOT NULL DEFAULT 'https://images.pexels.com/photos/1222949/pexels-photo-1222949.jpeg?cs=srgb&dl=pexels-min-an-1222949.jpg&fm=jpg'
+  `image` longtext NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -51,8 +51,9 @@ CREATE TABLE `groups` (
 --
 
 CREATE TABLE `members` (
+  `id` int(11) NOT NULL,
   `groupId` varchar(25) NOT NULL,
-  `userName` varchar(100) NOT NULL,
+  `username` varchar(100) NOT NULL,
   `admin` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -90,13 +91,25 @@ CREATE TABLE `messages` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `token`
+--
+
+CREATE TABLE `token` (
+  `username` varchar(50) NOT NULL,
+  `token` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
 CREATE TABLE `users` (
-  `userName` varchar(50) NOT NULL,
+  `username` varchar(50) NOT NULL,
   `name` varchar(50) NOT NULL,
-  `image` varchar(255) NOT NULL
+  `image` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -116,6 +129,12 @@ ALTER TABLE `groups`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `members`
+--
+ALTER TABLE `members`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `message`
 --
 ALTER TABLE `message`
@@ -128,10 +147,27 @@ ALTER TABLE `messages`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `token`
+--
+ALTER TABLE `token`
+  ADD PRIMARY KEY (`username`),
+  ADD UNIQUE KEY `token` (`token`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
-  ADD PRIMARY KEY (`userName`);
+  ADD PRIMARY KEY (`username`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `members`
+--
+ALTER TABLE `members`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

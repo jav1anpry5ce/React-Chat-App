@@ -53,22 +53,27 @@ io.on("connection", (socket) => {
   const id = socket.id;
   socket.on("userData", (data) => {
     if (!data) return;
-    sql.get_or_create_user(data).then((user) => {
-      const joinedUser = {
-        id: id,
-        name: user.name,
-        image: user.image,
-        username: user.username,
-      };
-      const u = usersList.find((u) => u.username === user.username);
-      if (u) {
-        u.id = id;
-        u.name = user.name;
-        u.image = user.image;
-      } else {
-        usersList.push(joinedUser);
-      }
-    });
+    sql
+      .getUser(data.username)
+      .then((user) => {
+        const joinedUser = {
+          id: id,
+          name: user.name,
+          image: user.image,
+          username: user.username,
+        };
+        const u = usersList.find((u) => u.username === user.username);
+        if (u) {
+          u.id = id;
+          u.name = user.name;
+          u.image = user.image;
+        } else {
+          usersList.push(joinedUser);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   });
 
   socket.on("online", (username) => {

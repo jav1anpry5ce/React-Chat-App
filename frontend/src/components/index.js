@@ -5,3 +5,4 @@ export { default as Profile } from "./Profile";
 export { default as ReturnCall } from "./ReturnCall";
 export { default as CreateGroupInterface } from "./CreateGroupInterface";
 export { default as ViewGroupInfo } from "./ViewGroupInfo";
+export { default as Notifications } from "./Notifications";
