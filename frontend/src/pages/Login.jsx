@@ -45,7 +45,7 @@ export default function Login() {
         setLoading(false);
       });
   };
-  if (user) return <Navigate to="/" />;
+  if (user && Object.keys(user).length > 0) return <Navigate to="/" />;
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-gray-900 text-white">
       <div className="flex w-full max-w-lg flex-col items-center justify-center gap-4 rounded bg-gray-700/50 p-4 shadow-lg shadow-black/30">

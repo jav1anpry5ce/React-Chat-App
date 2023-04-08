@@ -483,6 +483,17 @@ const login = (username) => {
   });
 };
 
+const verifyToken = (token) => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT username FROM token WHERE token = '${token}'`;
+    con.query(sql, (err, result) => {
+      if (err) return reject(err);
+      if (result.length === 0) return reject("Invalid token");
+      return resolve(result[0].username);
+    });
+  });
+};
+
 module.exports = {
   createConversation,
   getConversation,
@@ -506,4 +517,5 @@ module.exports = {
   get_or_create_token,
   updateGroupChat,
   login,
+  verifyToken,
 };

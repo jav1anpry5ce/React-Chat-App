@@ -9,21 +9,7 @@ import { ChatContext } from "../utils/ChatContext";
 import { isToday, isYesterday } from "date-fns";
 import { Transition } from "@headlessui/react";
 import { motion } from "framer-motion";
-
-// function showNotification(head, body) {
-//   if (body.type === "text") {
-//     new Notification(head, {
-//       body: body.text,
-//       silent: true,
-//     });
-//   } else {
-//     new Notification(head, {
-//       body: body.type,
-//       data: body.text,
-//       silent: true,
-//     });
-//   }
-// }
+import { useSearchParams } from "react-router-dom";
 
 function scrollToBottom() {
   const s = document.getElementById("scroll");
@@ -33,9 +19,10 @@ function scrollToBottom() {
   });
 }
 
-export default function Chat({ audio }) {
+export default function Chat() {
   const { socket, chatting, user, setShow, chats, hide, setChatting } =
     useContext(ChatContext);
+  const [searchParams] = useSearchParams();
   const [typing, setTyping] = useState(false);
   const [bottom, setBottom] = useState(true);
   const [chat, setChat] = useState({});
@@ -48,22 +35,6 @@ export default function Chat({ audio }) {
         scrollToBottom();
       }, 100);
       setTyping(false);
-      // const lastMessage = chat.messages.at(-1);
-      // if (lastMessage.receiver === username) {
-      //   const name = chats.find((c) => c?.id === chat.id)?.name;
-      //   showNotification(
-      //     `New message from ${name ? name : lastMessage.sender}`,
-      //     lastMessage.message
-      //   );
-      //   if (audio.paused || audio.currentTime > 0) {
-      //     audio.currentTime = 0;
-      //     audio.volume = 0.045;
-      //     audio.play();
-      //   } else {
-      //     audio.volume = 0.045;
-      //     audio.play();
-      //   }
-      // }
     }
     // eslint-disable-next-line
   }, [chats, chatting]);
@@ -73,11 +44,6 @@ export default function Chat({ audio }) {
       if (typing) setTyping(false);
     }, 5000);
   }, [typing]);
-
-  // useEffect(() => {
-  //   console.log(chat);
-  //   // eslint-disable-next-line
-  // }, [chat]);
 
   useEffect(() => {
     var listener;
@@ -99,46 +65,18 @@ export default function Chat({ audio }) {
         }
       }
     });
-    // socket.on("newMessage", (data) => {
-    //   if (chatting) {
-    //     if (
-    //       chatting.username === data.sender.username ||
-    //       data.sender.username === username
-    //     ) {
-    //       setTimeout(() => {
-    //         scrollToBottom();
-    //       }, 100);
-    //     }
-    //     if (data.sender.username === chatting.username) {
-    //       setTyping(false);
-    //     }
-    //     if (data.receiver.username === username) {
-    //       if (audio.paused || audio.currentTime > 0) {
-    //         audio.currentTime = 0;
-    //         audio.volume = 0.045;
-    //         audio.play();
-    //       } else {
-    //         audio.volume = 0.045;
-    //         audio.play();
-    //       }
-    //     }
-    //   }
-    // });
     return () => {
       socket.off("usertyping");
-      // socket.off("newMessage");
       if (listener) s.removeEventListener("scroll", listener);
     };
     // eslint-disable-next-line
   }, [chatting, typing]);
 
   useEffect(() => {
-    const chatting = window.location.search.split("?")[1];
+    const chatting = searchParams.get("id")
     const chat = chats?.find((u) => u.id === chatting);
     if (chat) {
-      setTimeout(() => {
-        setChatting(chat);
-      }, 500);
+      setChatting(chat);
     }
     // eslint-disable-next-line
   }, []);
@@ -197,8 +135,8 @@ export default function Chat({ audio }) {
               </ul>
               <Transition
                 show={!bottom}
-                className="fixed right-3 
-              bottom-[4.5rem] flex h-9 w-9
+                className="fixed bottom-[4.5rem] 
+              right-3 flex h-9 w-9
               animate-slideIn cursor-pointer items-center justify-center rounded-full bg-slate-700/80 text-white hover:bg-slate-600/80"
                 leave="transition transform duration-700"
                 leaveFrom="translate-y-0"

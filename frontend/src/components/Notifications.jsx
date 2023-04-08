@@ -6,7 +6,7 @@ export default function Notifications() {
   const { notifications } = useContext(ChatContext);
 
   return (
-    <div className="pointer-events-none absolute top-0 right-0 z-[60] h-screen space-y-2 overflow-x-hidden p-4">
+    <div className="pointer-events-none absolute right-0 top-0 z-[60] h-screen space-y-2 overflow-x-hidden p-4">
       <AnimatePresence>
         {notifications?.map((notification) => (
           <Notification key={notification?.id} notification={notification} />

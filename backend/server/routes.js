@@ -12,10 +12,10 @@ router.post("/signup", (req, res) => {
     sql
       .createUser({ username, name, image_url, password: hash })
       .then(() => {
-        res.send({ message: "User created" });
+        res.status(201).send({ message: "User created" });
       })
       .catch((err) => {
-        res.send({ message: err.message });
+        res.status(500).send({ username: "username is not available" });
       });
   });
 });

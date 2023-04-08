@@ -5,10 +5,12 @@ import { MdCall } from "react-icons/md";
 import { BsCameraVideoFill } from "react-icons/bs";
 import { ChatContext } from "../utils/ChatContext";
 import { motion, AnimatePresence } from "framer-motion";
+import {useNavigate} from 'react-router-dom'
 
 export default function ChatHead({ typing }) {
   const { chatting, setShow, setChatting, callUser, socket, setGroup, chats } =
     useContext(ChatContext);
+  const navigate = useNavigate();
   const [online, setOnline] = useState(false);
   const [chat, setChat] = useState();
 
@@ -49,7 +51,7 @@ export default function ChatHead({ typing }) {
             aria-label="close"
             onClick={() => {
               setChatting(null);
-              window.history.replaceState(null, null, "?null");
+              navigate("/");
             }}
           />
           <img

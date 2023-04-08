@@ -54,34 +54,38 @@ io.on("connection", (socket) => {
   socket.on("userData", (data) => {
     if (!data) return;
     sql
-      .getUser(data.username)
+      .verifyToken(data.token)
       .then((user) => {
-        const joinedUser = {
-          id: id,
-          name: user.name,
-          image: user.image,
-          username: user.username,
-        };
-        const u = usersList.find((u) => u.username === user.username);
-        if (u) {
-          u.id = id;
-          u.name = user.name;
-          u.image = user.image;
-        } else {
-          usersList.push(joinedUser);
-        }
+        if (!user) return io.to(id).emit("error", { message: "Invalid token" });
+        sql
+          .getUser(data.username)
+          .then((user) => {
+            const joinedUser = {
+              id: id,
+              name: user.name,
+              image: user.image,
+              username: user.username,
+              lastPing: Date.now(),
+            };
+            const u = usersList.find((u) => u.id === id);
+            if (!u) usersList.push(joinedUser);
+            io.to(id).emit("userData", joinedUser);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       })
-      .catch((err) => {
-        console.log(err);
+      .catch(() => {
+        io.to(id).emit("tokenNotValid");
       });
   });
 
   socket.on("online", (username) => {
     const user = usersList.find((user) => user.username === username);
     if (user) {
-      socket.emit("online", { username, online: true });
+      io.to(id).emit("online", { username, online: true });
     } else {
-      socket.emit("online", { username, online: false });
+      io.to(id).emit("online", { username, online: false });
     }
   });
 
@@ -90,9 +94,11 @@ io.on("connection", (socket) => {
       users: [userToAdd, user],
     });
     if (conversation)
-      return socket.emit("error", { message: "Conversation already exists" });
+      return io
+        .to(id)
+        .emit("error", { message: "Conversation already exists" });
     if (userToAdd === user)
-      return socket.emit("error", {
+      return io.to(id).emit("error", {
         message: "You can't talk to yourself silly!",
       });
     sql
@@ -113,28 +119,34 @@ io.on("connection", (socket) => {
             unread: 0,
           };
           io.to(id).emit("userAdded", chat);
-          const user = usersList.find((user) => user.username === userToAdd);
-          if (user) io.to(user.id).emit("userAdded", chat);
+          const users = usersList.filter((user) => user.username === userToAdd);
+          users.forEach((user) => {
+            io.to(user.id).emit("userAdded", chat);
+          });
         });
       })
       .catch(() => {
-        socket.emit("notFound");
+        io.to(id).emit("notFound");
       });
   });
 
   socket.on("updateMe", ({ username, name, image }) => {
     sql.updateUser(username, name, image).then(() => {
-      socket.emit("updated", { name, image });
+      const users = usersList.filter((user) => user.username === username);
+      users.forEach((user) => {
+        io.to(user.id).emit("updated", { name, image });
+      });
     });
   });
 
   socket.on("typing", (data) => {
-    const user = usersList.find((user) => user.username === data.username);
-    if (user)
+    const users = usersList.filter((user) => user.username === data.username);
+    users.forEach((user) => {
       io.to(user.id).emit("usertyping", {
         user: data.username,
         typing: data.typing,
       });
+    });
   });
 
   socket.on("chat", async (data) => {
@@ -166,8 +178,10 @@ io.on("connection", (socket) => {
                 .then((conversation) => {
                   const users = JSON.parse(conversation.users);
                   users.map((user) => {
-                    const id = usersList.find((u) => u.username === user);
-                    if (id) io.to(id.id).emit("newMessage", newMessage);
+                    const ids = usersList.filter((u) => u.username === user);
+                    ids.map((id) => {
+                      io.to(id.id).emit("newMessage", newMessage);
+                    });
                   });
                 });
             });
@@ -200,8 +214,10 @@ io.on("connection", (socket) => {
                 .then((conversation) => {
                   const users = JSON.parse(conversation.users);
                   users.map((user) => {
-                    const id = usersList.find((u) => u.username === user);
-                    if (id) io.to(id.id).emit("newMessage", newMessage);
+                    const ids = usersList.filter((u) => u.username === user);
+                    ids.forEach((id) => {
+                      io.to(id.id).emit("newMessage", newMessage);
+                    });
                   });
                 });
             });
@@ -220,8 +236,10 @@ io.on("connection", (socket) => {
           sql.getConversationById(data.conversationId).then((conversation) => {
             const users = JSON.parse(conversation.users);
             users.map((user) => {
-              const id = usersList.find((u) => u.username === user);
-              if (id) io.to(id.id).emit("newMessage", newMessage);
+              const ids = usersList.filter((u) => u.username === user);
+              ids.forEach((id) => {
+                io.to(id.id).emit("newMessage", newMessage);
+              });
             });
           });
         });
@@ -232,36 +250,43 @@ io.on("connection", (socket) => {
   });
 
   socket.on("callUser", (data) => {
-    const user = usersList.find((user) => user.username === data.userToCall);
-    if (user) {
+    const users = usersList.filter((user) => user.username === data.userToCall);
+    users.forEach((user) => {
       io.to(user.id).emit("callUser", {
         signal: data.signalData,
-        type: data.type,
         from: data.from,
         name: data.name,
         image: data.image,
       });
-    }
+    });
   });
 
   socket.on("answerCall", (data) => {
-    const user = usersList.find((user) => user.username === data.to);
-    io.to(user.id).emit("callAccepted", data.signal);
+    const users = usersList.filter((user) => user.username === data.to);
+    users.forEach((user) => {
+      io.to(user.id).emit("callAccepted", data.signal);
+    });
   });
 
   socket.on("endCall", (username) => {
-    const user = usersList.find((us) => us.username === username);
-    if (user) io.to(user.id).emit("endCall");
+    const users = usersList.filter((us) => us.username === username);
+    users.forEach((user) => {
+      io.to(user.id).emit("endCall");
+    });
   });
 
   socket.on("ignoreCall", (username) => {
-    const user = usersList.find((user) => user.username === username);
-    if (user) io.to(user.id).emit("ignoreCall");
+    const users = usersList.filter((user) => user.username === username);
+    users.forEach((user) => {
+      io.to(user.id).emit("ignoreCall");
+    });
   });
 
   socket.on("busy", (username) => {
-    const user = usersList.find((user) => user.username === username);
-    if (user) io.to(user.id).emit("busy");
+    const users = usersList.filter((user) => user.username === username);
+    users.forEach((user) => {
+      io.to(user.id).emit("busy");
+    });
   });
 
   socket.on("deleteMessage", ({ messageID, conversationID, username }) => {
@@ -271,8 +296,10 @@ io.on("connection", (socket) => {
         io.emit("messageDeleted", { messageID, conversationID, message });
       })
       .catch((err) => {
-        const user = usersList.find((user) => user.username === username);
-        if (user) io.to(user.id).emit("error", { message: err });
+        const users = usersList.filter((user) => user.username === username);
+        users.forEach((user) => {
+          io.to(user.id).emit("error", { message: err });
+        });
       });
   });
 
@@ -302,10 +329,12 @@ io.on("connection", (socket) => {
             sql.createMessage(newMessage).then(() => {
               sql.getGroupMembers(data.conversationId).then((members) => {
                 members.map((member) => {
-                  const user = usersList.find(
+                  const users = usersList.filter(
                     (u) => u.username === member.username
                   );
-                  if (user) io.to(user.id).emit("newMessage", newMessage);
+                  users.forEach((user) => {
+                    if (user) io.to(user.id).emit("newMessage", newMessage);
+                  });
                 });
               });
             });
@@ -335,10 +364,12 @@ io.on("connection", (socket) => {
             sql.createMessage(newMessage).then(() => {
               sql.getGroupMembers(data.conversationId).then((members) => {
                 members.map((member) => {
-                  const user = usersList.find(
+                  const users = usersList.filter(
                     (u) => u.username === member.username
                   );
-                  if (user) io.to(user.id).emit("newMessage", newMessage);
+                  users.forEach((user) => {
+                    io.to(user.id).emit("newMessage", newMessage);
+                  });
                 });
               });
             });
@@ -356,10 +387,12 @@ io.on("connection", (socket) => {
         sql.createMessage(newMessage).then(() => {
           sql.getGroupMembers(data.conversationId).then((members) => {
             members.map((member) => {
-              const user = usersList.find(
+              const users = usersList.filter(
                 (u) => u.username === member.username
               );
-              if (user) io.to(user.id).emit("newMessage", newMessage);
+              users.forEach((user) => {
+                io.to(user.id).emit("newMessage", newMessage);
+              });
             });
           });
         });
@@ -378,12 +411,21 @@ io.on("connection", (socket) => {
       messages: [],
       chatType: "group",
     };
-    sql.createGroupChat(newGroup).then(() => {
-      data.members.forEach((member) => {
-        const user = usersList.find((u) => u.username === member.username);
-        if (user) io.to(user.id).emit("newGroup", newGroup);
+    sql
+      .createGroupChat(newGroup)
+      .then(() => {
+        data.members.forEach((member) => {
+          const users = usersList.filter((u) => u.username === member.username);
+          users.forEach((user) => {
+            io.to(user.id).emit("newGroup", newGroup);
+          });
+        });
+      })
+      .catch((err) => {
+        io.to(id).emit("error", {
+          message: "Something went wrong. Try again later.",
+        });
       });
-    });
   });
 
   socket.on("getChats", async (username) => {
@@ -408,8 +450,10 @@ io.on("connection", (socket) => {
   socket.on("changeGroup", (data) => {
     sql.updateGroupChat(data).then((group) => {
       group.members.forEach((member) => {
-        const user = usersList.find((u) => u.username === member.username);
-        if (user) io.to(user.id).emit("groupUpdated", group);
+        const users = usersList.filter((u) => u.username === member.username);
+        users.forEach((user) => {
+          io.to(user.id).emit("groupUpdated", group);
+        });
       });
     });
   });
@@ -422,10 +466,12 @@ io.on("connection", (socket) => {
           .getGroupChatById(groupId)
           .then((group) => {
             group.members.forEach((member) => {
-              const user = usersList.find(
+              const users = usersList.filter(
                 (u) => u.username === member.username
               );
-              if (user) io.to(user.id).emit("groupMemberAdded", group);
+              users.forEach((user) => {
+                io.to(user.id).emit("groupMemberAdded", group);
+              });
             });
           })
           .catch((err) => console.log(err));
@@ -433,11 +479,22 @@ io.on("connection", (socket) => {
       .catch((err) => console.log(err));
   });
 
+  // setInterval(() => {
+  //   io.emit("ping");
+  // }, 5000);
+
+  // socket.on("ping", (id) => {
+  //   const user = usersList.find((u) => u.id === id);
+  //   user.lastPing = Date.now();
+  //   usersList = usersList.filter((u) => u.lastPing > Date.now() - 10000);
+  // });
+
   socket.on("disconnect", () => {
     usersList = usersList.filter((user) => user.id !== id);
-    io.emit("users", usersList);
   });
 });
+
+
 
 try {
   server.listen(process.env.PORT || 5000, process.env.IP, () =>

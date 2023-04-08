@@ -9,20 +9,16 @@ import {
   ViewGroupInfo,
   Notifications,
 } from "../components";
-import noti from "../assets/noti.wav";
 import { Transition } from "@headlessui/react";
 import { AiOutlineMenuFold } from "react-icons/ai";
 import { ChatContext } from "../utils/ChatContext";
 import { Navigate } from "react-router-dom";
 
-Notification.requestPermission();
-
 function App() {
   const { show, setShow, hide, user } = useContext(ChatContext);
-  const [audio] = useState(new Audio(noti));
   const [isOpen, setIsOpen] = useState(false);
 
-  if (!user) return <Navigate to="/login" />;
+  if (!user || Object.keys(user).length === 0) return <Navigate to="/login" />;
   return (
     <div className="flex h-screen flex-col">
       {isOpen && (
@@ -89,8 +85,8 @@ function App() {
               <ChatList />
             </div>
           </Transition>
-          <div className="absolute top-0 right-0 h-full w-[100%] md:w-[65%] lg:w-[70%] xl:w-[75%]">
-            <Chat audio={audio} />
+          <div className="absolute right-0 top-0 h-full w-[100%] md:w-[65%] lg:w-[70%] xl:w-[75%]">
+            <Chat />
           </div>
         </div>
       </div>

@@ -70,7 +70,7 @@ export default function CreateGroupInterface() {
     >
       <div className="flex h-full w-full items-center justify-center">
         <form
-          className="flex min-h-[37rem] w-[40rem] flex-col gap-2 rounded-lg bg-gray-900 p-4 text-white"
+          className="flex h-full max-h-[37rem] w-[40rem] flex-col gap-2 rounded-lg bg-gray-900 p-4 text-white"
           onSubmit={handleSubmit}
           ref={formRef}
         >
@@ -97,7 +97,7 @@ export default function CreateGroupInterface() {
             />
           </div>
           <div className="flex grow flex-col gap-2">
-            <div className="gap flex max-h-[250px] grow flex-wrap justify-center gap-2 rounded bg-white/5 p-2 backdrop-blur">
+            <div className="flex h-[250px] grow flex-wrap justify-center gap-2 rounded bg-white/5 p-2 backdrop-blur">
               {members.map((user) => (
                 <div
                   key={user.username}
@@ -112,7 +112,7 @@ export default function CreateGroupInterface() {
                 </div>
               ))}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="-mb-2 flex flex-col gap-2">
               <input
                 name="username"
                 placeholder="Username"
@@ -133,7 +133,7 @@ export default function CreateGroupInterface() {
               </button>
             </div>
           </div>
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               className="w-full rounded bg-gradient-to-r from-orange-700 to-red-700 p-2 font-serif font-bold"

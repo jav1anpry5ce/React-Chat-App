@@ -42,6 +42,17 @@ const ChatProvider = ({ children }) => {
   const screenTrackRef = useRef();
 
   useEffect(() => {
+    const chats = JSON.parse(localStorage.getItem("chats"));
+    if (chats) {
+      setChats(chats);
+      return;
+    } else {
+      setChats([]);
+      localStorage.setItem("chats", JSON.stringify([]));
+    }
+  }, []);
+
+  useEffect(() => {
     socket.on("callUser", (data) => {
       if (calling || caller) {
         socket.emit("busy", data.from);
@@ -104,14 +115,7 @@ const ChatProvider = ({ children }) => {
 
   useEffect(() => {
     if (!chats) localStorage.setItem("chats", JSON.stringify([]));
-    if (user) {
-      socket.emit("userData", user);
-      socket.on("connect", () => {
-        socket.emit("userData", user);
-      });
-    }
-    return () => socket.off("connect");
-  }, [user, chats]);
+  }, [chats]);
 
   useEffect(() => {
     const swap = (data) => {
@@ -135,12 +139,12 @@ const ChatProvider = ({ children }) => {
       return new Promise((resolve, reject) => {
         const chats = JSON.parse(localStorage.getItem("chats"));
         const chat = chats.find((chat) => chat.id === data.conversationId);
-        if (chat) {
-          if (chatting?.id === chat?.id) resolve(chats);
-          else if (chat?.unread) chat.unread += 1;
-          else chat.unread = 1;
-          localStorage.setItem("chats", JSON.stringify(chats));
-        }
+        if (!chat) return;
+        if (data.sender.username === user.username) return resolve(chats);
+        if (chatting?.id === chat?.id) resolve(chats);
+        else if (chat?.unread) chat.unread += 1;
+        else chat.unread = 1;
+        localStorage.setItem("chats", JSON.stringify(chats));
         resolve(chats);
       });
     };
@@ -251,7 +255,23 @@ const ChatProvider = ({ children }) => {
       setChats(chats);
     });
 
+    socket.on("userData", (data) => {
+      if (!user) return;
+      if (
+        user.name === data.name &&
+        user.image === data.image &&
+        user?.id === data?.id
+      )
+        return;
+      user.id = data.id;
+      user.name = data.name;
+      user.image = data.image;
+      localStorage.setItem("user", JSON.stringify(user));
+      setUser(user);
+    });
+
     return () => {
+      socket.off("userData");
       socket.off("newMessage");
       socket.off("messageDeleted");
       socket.off("error");
@@ -264,7 +284,24 @@ const ChatProvider = ({ children }) => {
   }, [chatting]);
 
   useEffect(() => {
-    socket.emit("getChats", user?.username);
+    if (user) {
+      socket.emit("userData", user);
+      socket.emit("getChats", user?.username);
+      socket.on("connect", () => {
+        socket.emit("userData", user);
+      });
+    }
+    socket.on("tokenNotValid", () => {
+      localStorage.removeItem("user");
+      localStorage.setItem("chats", JSON.stringify([]));
+      setUser(null);
+      setChats([]);
+      setChatting(null);
+    });
+    return () => {
+      socket.off("tokenNotValid");
+      socket.off("connect");
+    };
   }, [user]);
 
   useEffect(() => {
@@ -289,9 +326,12 @@ const ChatProvider = ({ children }) => {
     });
     socket.on("updated", ({ name, image }) => {
       const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) return;
+      if (user.name === name && user.image === image) return;
       user.name = name;
       user.image = image;
       localStorage.setItem("user", JSON.stringify(user));
+      setUser(user);
     });
 
     return () => {
@@ -600,6 +640,8 @@ const ChatProvider = ({ children }) => {
   const notifyUser = (data) => {
     if (data?.sender?.username === user?.username) return;
     if (data.conversationId === chatting?.id) return;
+    const noti = notifications.find((n) => n.id === data.id);
+    if (noti) return;
     audio.currentTime = 0;
     audio.volume = 0.045;
     const chats = JSON.parse(localStorage.getItem("chats"));

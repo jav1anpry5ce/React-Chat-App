@@ -3,11 +3,13 @@ import { ChatContext } from "../utils/ChatContext";
 import { AiOutlineCloseCircle } from "react-icons/ai";
 import { MdInsertPhoto } from "react-icons/md";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 export default function ChatItem({ chat }) {
   const { setChatting, setShow, chatting, setZero, removeUser } =
     useContext(ChatContext);
   const [lastChat, setLastChat] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const lastChat = chat?.messages?.at(-1);
@@ -55,14 +57,14 @@ export default function ChatItem({ chat }) {
     >
       {chat.unread !== 0 && (
         <div
-          className="absolute top-3 right-5 flex items-center  justify-center 
+          className="absolute right-5 top-3 flex items-center  justify-center 
       rounded-full bg-emerald-600 px-1.5 text-white"
         >
           <p>{chat.unread}</p>
         </div>
       )}
       <div
-        className="absolute top-7 right-1 hidden hover:text-gray-300 group-hover:block"
+        className="absolute right-1 top-7 hidden hover:text-gray-300 group-hover:block"
         onClick={() => remove(chat.id, chat.name)}
       >
         <AiOutlineCloseCircle className="h-5 w-5" />
@@ -72,7 +74,8 @@ export default function ChatItem({ chat }) {
         onClick={() => {
           setChatting(chat);
           setShow(false);
-          window.history.replaceState(null, null, `?${chat?.id}`);
+          navigate(`/?id=${chat?.id}`);
+          // window.history.replaceState(null, null, `?${chat?.id}`);
         }}
       >
         <div className="relative aspect-square h-[3.2rem] w-[3.2rem]">

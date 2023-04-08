@@ -37,20 +37,18 @@ export default function SignUp() {
       password: password.value,
     };
 
-    const res = await axios.post(
-      "http://localhost:5000/api/signup",
-      data,
-      config
-    );
-    if (res.status === 200) {
-      setLoading(false);
-      setError(null);
-      e.target.reset();
-      navigate("/login");
-    } else {
-      setLoading(false);
-      setError(res.data);
-    }
+    axios
+      .post("http://localhost:5000/api/signup", data, config)
+      .then(() => {
+        setLoading(false);
+        setError(null);
+        e.target.reset();
+        navigate("/login");
+      })
+      .catch((err) => {
+        setLoading(false);
+        setError(err.response.data);
+      });
   };
 
   if (user) return <Navigate to="/" />;
