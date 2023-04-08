@@ -69,7 +69,6 @@ io.on("connection", (socket) => {
             };
             const u = usersList.find((u) => u.id === id);
             if (!u) usersList.push(joinedUser);
-            console.log(usersList);
             io.to(id).emit("userData", joinedUser);
           })
           .catch((err) => {
