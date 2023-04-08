@@ -1,14 +1,14 @@
 version: '3.8'
 
 services:
-  mysqldb:
-    image: mysql:8.0
-    container_name: mysqldb
+  database:
+    image: mariadb:latest
+    container_name: database
     command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
     volumes:
       - ./db/chat.sql:/docker-entrypoint-initdb.d/0_chat.sql
-      - $HOME/database:/var/lib/mysql
+      # - $HOME/database:/var/lib/mysql
     ports:
       - 3306:3306
     expose:
@@ -19,7 +19,7 @@ services:
       MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: password
       SERVICE_TAGS: dev
-      SERVICE_NAME: mysqldb
+      SERVICE_NAME: database
     networks:
       - raspserver
       
@@ -33,7 +33,7 @@ services:
     expose:
       - 5000
     environment:
-      HOST: mysqldb
+      HOST: database
       PORT: 5000
       DBPORT: 3306
       USER: 'admin'
@@ -44,7 +44,7 @@ services:
     networks:
       - raspserver
     depends_on:
-      - mysqldb
+      - database
 
 networks:
   raspserver:

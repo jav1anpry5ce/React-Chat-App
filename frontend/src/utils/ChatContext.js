@@ -35,6 +35,7 @@ const ChatProvider = ({ children }) => {
   const [group, setGroup] = useState(null);
   const [audio] = useState(new Audio(noti));
   const [notifications, setNotifications] = useState([]);
+  const [clear, setClear] = useState(false);
 
   const myVideo = useRef();
   const userStream = useRef();
@@ -137,6 +138,7 @@ const ChatProvider = ({ children }) => {
     };
     const setUnread = (data) => {
       return new Promise((resolve, reject) => {
+        const user = JSON.parse(localStorage.getItem("user"));
         const chats = JSON.parse(localStorage.getItem("chats"));
         const chat = chats.find((chat) => chat.id === data.conversationId);
         if (!chat) return;
@@ -190,13 +192,13 @@ const ChatProvider = ({ children }) => {
     socket.on("newGroup", (data) => {
       const chat = data;
       const chats = JSON.parse(localStorage.getItem("chats"));
-      if (chats) {
-        if (!chats.find((chat) => chat.username === data.id)) {
-          setCreateGroupChat(false);
-          const newChats = chats.concat(chat);
-          localStorage.setItem("chats", JSON.stringify(newChats));
-          setChats(newChats);
-        }
+      if (!chats) return;
+      if (!chats.find((chat) => chat.username === data.id)) {
+        setCreateGroupChat(false);
+        setClear(true);
+        const newChats = chats.concat(chat);
+        localStorage.setItem("chats", JSON.stringify(newChats));
+        setChats(newChats);
       }
     });
 
@@ -731,6 +733,8 @@ const ChatProvider = ({ children }) => {
     changeGroup,
     notifications,
     audio,
+    clear,
+    setClear,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

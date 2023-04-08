@@ -1,4 +1,4 @@
-import { useContext, useRef, useState } from "react";
+import { useContext, useRef, useState, useEffect } from "react";
 import { ChatContext } from "../utils/ChatContext";
 import { motion } from "framer-motion";
 import axios from "axios";
@@ -8,12 +8,27 @@ export default function CreateGroupInterface() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { createGroup, createGroupChat, setCreateGroupChat, user } =
+  const { createGroup, createGroupChat, setCreateGroupChat, user, clear, setClear } =
     useContext(ChatContext);
   const formRef = useRef(null);
 
+  useEffect(() => { 
+    if (clear) {
+      setMembers([]);
+      setLoading(false);
+      setError(null);
+      formRef.current.reset();
+      setClear(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clear]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (members.length === 0) {
+      setError({ message: "You need at least 1 member" });
+      return;
+    }
     const data = {
       groupName: e.target.groupName.value,
       groupImage: e.target.groupImage.value,
