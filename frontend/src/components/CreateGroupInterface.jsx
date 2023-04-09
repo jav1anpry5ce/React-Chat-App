@@ -127,7 +127,7 @@ export default function CreateGroupInterface() {
                 </div>
               ))}
             </div>
-            <div className="-mb-2 flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
               <input
                 name="username"
                 placeholder="Username"
