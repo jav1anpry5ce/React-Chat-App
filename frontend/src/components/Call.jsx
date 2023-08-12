@@ -93,7 +93,7 @@ export default function Call() {
           >
             {receivingCall && !callAccepted ? (
               <div className="inline-block h-[18rem] w-full transform overflow-hidden rounded-lg bg-gray-900 text-left align-bottom text-white shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-[30rem] sm:align-middle">
-                <div className="flex h-full flex-col items-center justify-between bg-gray-900 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex h-full flex-col items-center justify-between bg-gray-900 pb-4 pt-5 sm:p-6 sm:pb-4">
                   <p className="text-lg font-semibold">
                     You are receiving a call
                   </p>
@@ -139,6 +139,7 @@ export default function Call() {
                             autoPlay
                             className="w-full rounded"
                             onTimeUpdate={onPlaying}
+                            playsInline
                           />
                         </div>
                         <motion.div
@@ -149,13 +150,14 @@ export default function Call() {
                             right: 0,
                             bottom: 0,
                           }}
-                          className="z-30 h-auto cursor-move md:absolute md:right-0 md:bottom-0 md:w-[15rem]"
+                          className="z-30 h-auto cursor-move md:absolute md:bottom-0 md:right-0 md:w-[15rem]"
                         >
                           <video
                             ref={myVideo}
                             autoPlay
                             muted
                             className="w-full rounded"
+                            playsInline
                           />
                         </motion.div>
                       </div>
@@ -211,6 +213,7 @@ export default function Call() {
                         autoPlay
                         muted
                         className="aspect-auto h-auto w-[40rem] rounded"
+                        playsInline
                       />
                       <div className="absolute bottom-0 z-10 flex w-full items-center justify-center space-x-8 px-4 py-2">
                         <div
@@ -262,7 +265,7 @@ export default function Call() {
               </div>
             ) : (
               <div className="inline-block h-[30rem] w-full transform overflow-hidden rounded-lg bg-gray-900 text-left align-bottom text-white shadow-xl transition-all sm:my-8 sm:max-w-sm sm:align-middle">
-                <div className="flex h-full flex-col items-center bg-gray-900 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex h-full flex-col items-center bg-gray-900 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                   {callAccepted && (
                     <audio ref={userStream} autoPlay onTimeUpdate={onPlaying} />
                   )}
@@ -313,7 +316,7 @@ export default function Call() {
               </div>
             )}
           </Transition.Child>
-          <div className="group fixed top-2 right-5 cursor-pointer bg-white transition duration-150 hover:bg-red-500 hover:text-white">
+          <div className="group fixed right-5 top-2 cursor-pointer bg-white transition duration-150 hover:bg-red-500 hover:text-white">
             <AiOutlineClose
               className="h-6 w-6"
               onClick={() => {

@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useContext } from "react";
 import {
   ChatList,
   Chat,
@@ -16,32 +16,10 @@ import { Navigate } from "react-router-dom";
 
 function App() {
   const { show, setShow, hide, user } = useContext(ChatContext);
-  const [isOpen, setIsOpen] = useState(false);
 
   if (!user || Object.keys(user).length === 0) return <Navigate to="/login" />;
   return (
-    <div className="flex h-screen flex-col">
-      {isOpen && (
-        <div className="flex items-center bg-slate-600 p-1">
-          <p className="grow text-center text-sm font-medium text-gray-100 md:text-xl">
-            Server is currently offline. This project source code can be
-            access&nbsp;
-            <a
-              href="https://github.com/jav1anpry5ce/React-Chat-App"
-              className="underline"
-            >
-              here
-            </a>
-          </p>
-          <button
-            className="text-3xl text-gray-100 hover:text-red-500"
-            onClick={() => setIsOpen(false)}
-          >
-            &times;
-          </button>
-        </div>
-      )}
-
+    <main className="flex max-h-screen flex-col bg-slate-800 supports-[height:100cqh]:h-[100cqh] supports-[height:100svh]:h-[100svh]">
       <div
         className="flex flex-1 
     transform overflow-hidden
@@ -73,7 +51,7 @@ function App() {
           >
             <div>
               <div
-                className={`scroll sticky top-0 z-50 flex w-full justify-end bg-slate-900/70 ${
+                className={`scroll sticky top-0 z-50 flex w-full justify-end bg-slate-800/70 ${
                   hide && "pt-5"
                 } backdrop-blur`}
               >
@@ -90,7 +68,7 @@ function App() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 

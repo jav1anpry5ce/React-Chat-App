@@ -7,23 +7,44 @@ import { ChatContext } from "../utils/ChatContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {useNavigate} from 'react-router-dom'
 
-export default function ChatHead({ typing }) {
+export default function ChatHead() {
   const { chatting, setShow, setChatting, callUser, socket, setGroup, chats } =
     useContext(ChatContext);
   const navigate = useNavigate();
   const [online, setOnline] = useState(false);
+  const [typing, setTyping] = useState(false);
   const [chat, setChat] = useState();
 
   useEffect(() => {
-    setOnline(false);
     socket.on("online", ({ username, online }) => {
-      if (username === chatting?.username) {
+      if (username === chat?.username) {
         setOnline(online);
       }
     });
-    return () => socket.off("online");
+    socket.on("usertyping", (data) => {
+      if (chat) {
+        if (data.typing === chat.username) {
+          if (!typing) setTyping(true);
+        } else {
+          if (typing) setTyping(false);
+        }
+      }
+    });
+    socket.on("newMessage", (data) => {
+      if (data.sender?.username === chat?.username) setTyping(false);
+    });
+    return () => {
+      socket.off("online");
+      socket.off("usertyping");
+    };
     // eslint-disable-next-line
-  }, [chatting]);
+  }, [chat]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (typing) setTyping(false);
+    }, 2500);
+  }, [typing]);
 
   useEffect(() => {
     const chat = chats.find((chat) => chat.id === chatting?.id);
@@ -68,7 +89,7 @@ export default function ChatHead({ typing }) {
             {chat?.name}
           </p>
           <AnimatePresence>
-            {typing && online && (
+            {typing && (
               <motion.p
                 layout="position"
                 initial={{ opacity: 0 }}

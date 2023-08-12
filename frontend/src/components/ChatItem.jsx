@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { ChatContext } from "../utils/ChatContext";
-import { AiOutlineCloseCircle } from "react-icons/ai";
+import { AiOutlineClose } from "react-icons/ai";
 import { MdInsertPhoto } from "react-icons/md";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -64,10 +64,10 @@ export default function ChatItem({ chat }) {
         </div>
       )}
       <div
-        className="absolute right-1 top-7 hidden hover:text-gray-300 group-hover:block"
+        className="absolute right-5 top-7 hidden hover:text-red-400 group-hover:block"
         onClick={() => remove(chat.id, chat.name)}
       >
-        <AiOutlineCloseCircle className="h-5 w-5" />
+        <AiOutlineClose className="h-5 w-5" />
       </div>
       <div
         className="flex h-full select-none items-center space-x-3"

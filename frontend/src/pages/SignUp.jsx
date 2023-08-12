@@ -13,7 +13,7 @@ export default function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const { name, username, image_url, password, confirm_password } = e.target;
+    const { name, username, password, confirm_password } = e.target;
     if (password.value !== confirm_password.value) {
       setError({ confirm_password: "passwords do not match" });
       setLoading(false);
@@ -33,12 +33,11 @@ export default function SignUp() {
     const data = {
       username: username.value,
       name: name.value,
-      image_url: image_url.value,
       password: password.value,
     };
 
     axios
-      .post("http://localhost:5000/api/signup", data, config)
+      .post("http://api.chatapp.home/api/signup", data, config)
       .then(() => {
         setLoading(false);
         setError(null);
@@ -48,80 +47,85 @@ export default function SignUp() {
       .catch((err) => {
         setLoading(false);
         setError(err.response.data);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
   if (user) return <Navigate to="/" />;
   return (
-    <main className="flex min-h-screen w-full items-center justify-center bg-gray-900 text-white">
+    <main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-tr from-gray-900 to-cyan-950 px-4 text-white">
       <div className="flex w-full max-w-lg flex-col items-center justify-center gap-4 rounded bg-gray-700/50 p-4 shadow-lg shadow-black/30">
         <h1 className="text-2xl font-bold text-white">Sign Up</h1>
         <form className="w-full space-y-3 py-2" onSubmit={handleSubmit}>
-          <div>
+          <div className="form-control w-full">
             <input
               required
               type="text"
               name="name"
-              className="sm:text-md block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-gray-900 outline-none focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+              className="input-bordered input w-full"
               placeholder="name"
             />
             {error?.name && (
-              <p className="ml-1 text-xs text-red-400">{error.name}</p>
+              <label className="label">
+                <span className="label-text-alt text-red-400">
+                  {error.name}
+                </span>
+              </label>
             )}
           </div>
-          <div>
+          <div className="form-control w-full">
             <input
               required
               type="text"
               name="username"
-              className="sm:text-md block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-gray-900 outline-none focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+              className="input-bordered input w-full"
               placeholder="username"
             />
             {error?.username && (
-              <p className="ml-1 text-xs text-red-400">{error.username}</p>
+              <label className="label">
+                <span className="label-text-alt text-red-400">
+                  {error.username}
+                </span>
+              </label>
             )}
           </div>
-          <div>
-            <input
-              required
-              type="url"
-              name="image_url"
-              className="sm:text-md block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-gray-900 outline-none focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-              placeholder="Image url"
-            />
-            {error?.image_url && (
-              <p className="ml-1 text-xs text-red-400">{error.image_url}</p>
-            )}
-          </div>
-          <div>
+          <div className="form-control w-full">
             <input
               required
               type="password"
               name="password"
-              className="sm:text-md block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-gray-900 outline-none focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+              className="input-bordered input w-full"
               placeholder="password"
             />
             {error?.password && (
-              <p className="ml-1 text-xs text-red-400">{error.password}</p>
+              <label className="label">
+                <span className="label-text-alt text-red-400">
+                  {error.password}
+                </span>
+              </label>
             )}
           </div>
-          <div>
+          <div className="form-control w-full">
             <input
               required
               type="password"
               name="confirm_password"
-              className="sm:text-md block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-gray-900 outline-none focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+              className="input-bordered input w-full"
               placeholder="confirm password"
             />
             {error?.confirm_password && (
-              <p className="ml-1 text-xs text-red-400">
-                {error.confirm_password}
-              </p>
+              <label className="label">
+                <span className="label-text-alt text-red-400">
+                  {error.confirm_password}
+                </span>
+              </label>
             )}
           </div>
           <button
             type="submit"
-            className="w-full rounded bg-gradient-to-r from-violet-500 to-fuchsia-500 p-2 font-serif font-bold shadow-none shadow-fuchsia-500/50 hover:from-fuchsia-500 hover:to-violet-500 hover:shadow-lg"
+            className="btn w-full rounded border-none bg-gradient-to-r from-violet-500 to-fuchsia-500 p-2 font-serif font-bold text-white shadow-none shadow-fuchsia-500/50 hover:from-fuchsia-500 hover:to-violet-500 hover:shadow-lg"
           >
             <div className="inline-flex items-center gap-2">
               <p>Sign Up</p>
@@ -130,11 +134,13 @@ export default function SignUp() {
               )}
             </div>
           </button>
-          <Link to="/login">
-            <p className="pt-2 text-center text-sm text-white hover:text-blue-400">
-              Already have an account? Login here
-            </p>
-          </Link>
+          <div className="mx-auto w-fit">
+            <Link to="/login">
+              <p className="text-center text-sm text-white hover:text-blue-400">
+                Already have an account? Login here
+              </p>
+            </Link>
+          </div>
         </form>
       </div>
     </main>

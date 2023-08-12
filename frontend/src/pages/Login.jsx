@@ -26,7 +26,7 @@ export default function Login() {
     };
 
     axios
-      .post("http://localhost:5000/api/login", data, config)
+      .post("http://api.chatapp.home/api/login", data, config)
       .then((res) => {
         socket.emit("getChats", res.data.username);
         const user = {
@@ -41,13 +41,17 @@ export default function Login() {
         setLoading(false);
       })
       .catch((err) => {
+        console.log(err);
         setError(err.response.data);
+        setLoading(false);
+      })
+      .finally(() => {
         setLoading(false);
       });
   };
   if (user && Object.keys(user).length > 0) return <Navigate to="/" />;
   return (
-    <main className="flex min-h-screen w-full items-center justify-center bg-gray-900 text-white">
+    <main className="flex min-h-screen w-full items-center justify-center bg-gradient-to-tr from-gray-900 to-cyan-950 px-4 text-white">
       <div className="flex w-full max-w-lg flex-col items-center justify-center gap-4 rounded bg-gray-700/50 p-4 shadow-lg shadow-black/30">
         <h1 className="text-2xl font-bold text-white">Login</h1>
         <form className="w-full space-y-4 py-2" onSubmit={handleSubmit}>
@@ -55,14 +59,14 @@ export default function Login() {
             required
             type="text"
             name="username"
-            className="sm:text-md block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-gray-900 outline-none focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+            className="input-bordered input w-full"
             placeholder="username"
           />
           <input
             required
             type="password"
             name="password"
-            className="sm:text-md block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-gray-900 outline-none focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+            className="input-bordered input w-full"
             placeholder="password"
           />
           {error && (
@@ -71,18 +75,20 @@ export default function Login() {
           <button
             disabled={loading}
             type="submit"
-            className="inline-flex w-full items-center justify-center gap-2 rounded bg-gradient-to-r from-violet-500 to-fuchsia-500 p-2 font-serif font-bold shadow-none shadow-fuchsia-500/50 hover:from-fuchsia-500 hover:to-violet-500 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
+            className="btn-outline btn w-full"
           >
             <p>Login</p>
             {loading && (
               <AiOutlineLoading3Quarters className="inline-block animate-spin" />
             )}
           </button>
-          <Link to="/signup">
-            <p className="pt-2 text-center text-sm text-white hover:text-blue-400">
-              Don't have an account? Register here
-            </p>
-          </Link>
+          <div className="mx-auto -mt-4 w-fit">
+            <Link to="/signup">
+              <p className="text-center text-sm text-white hover:text-blue-400">
+                Don't have an account? Register here
+              </p>
+            </Link>
+          </div>
         </form>
       </div>
     </main>

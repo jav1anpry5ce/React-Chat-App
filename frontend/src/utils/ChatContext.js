@@ -2,12 +2,13 @@ import { createContext, useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import Peer from "simple-peer";
 import noti from "../assets/noti.wav";
+import axios from "axios";
 const shortid = require("shortid");
 // const ip = "https://backend.javaughnpryce.live:5001";
 
 const ChatContext = createContext();
 
-const socket = io("http://localhost:5000");
+const socket = io("http://api.chatapp.home");
 
 const ChatProvider = ({ children }) => {
   const [chats, setChats] = useState(
@@ -42,6 +43,31 @@ const ChatProvider = ({ children }) => {
   const connectionRef = useRef();
   const screenTrackRef = useRef();
 
+  const getUpdateUser = async (user) => {
+    const uUser = await axios.get(`http://api.chatapp.home/api/user`, {
+      headers: {
+        Authorization: `${user.token}`,
+      },
+    });
+    if (!uUser) return;
+    const updatedUser = {
+      ...uUser.data,
+      token: user.token,
+    };
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
+  const updateUser = (user) => {
+    const oldUser = JSON.parse(localStorage.getItem("user"));
+    const updatedUser = {
+      ...user,
+      token: oldUser.token,
+    };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  };
+
   useEffect(() => {
     const chats = JSON.parse(localStorage.getItem("chats"));
     if (chats) {
@@ -54,7 +80,13 @@ const ChatProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    getUpdateUser(user);
+  }, []);
+
+  useEffect(() => {
     socket.on("callUser", (data) => {
+      console.log(data);
       if (calling || caller) {
         socket.emit("busy", data.from);
       } else {
@@ -122,11 +154,9 @@ const ChatProvider = ({ children }) => {
     const swap = (data) => {
       return new Promise(async (resolve, reject) => {
         const initialChats = JSON.parse(localStorage.getItem("chats"));
+        if (!initialChats) return resolve([]);
         initialChats.forEach((item, i) => {
           if (item.id === data.conversationId) {
-            initialChats.splice(i, 1);
-            initialChats.unshift(item);
-          } else if (item.id === data.conversationId) {
             initialChats.splice(i, 1);
             initialChats.unshift(item);
           }
@@ -140,10 +170,11 @@ const ChatProvider = ({ children }) => {
       return new Promise((resolve, reject) => {
         const user = JSON.parse(localStorage.getItem("user"));
         const chats = JSON.parse(localStorage.getItem("chats"));
+        if (!chats) return resolve([]);
         const chat = chats.find((chat) => chat.id === data.conversationId);
-        if (!chat) return;
+        if (!chat) return resolve([]);
         if (data.sender.username === user.username) return resolve(chats);
-        if (chatting?.id === chat?.id) resolve(chats);
+        if (chatting?.id === chat?.id) return resolve(chats);
         else if (chat?.unread) chat.unread += 1;
         else chat.unread = 1;
         localStorage.setItem("chats", JSON.stringify(chats));
@@ -257,23 +288,7 @@ const ChatProvider = ({ children }) => {
       setChats(chats);
     });
 
-    socket.on("userData", (data) => {
-      if (!user) return;
-      if (
-        user.name === data.name &&
-        user.image === data.image &&
-        user?.id === data?.id
-      )
-        return;
-      user.id = data.id;
-      user.name = data.name;
-      user.image = data.image;
-      localStorage.setItem("user", JSON.stringify(user));
-      setUser(user);
-    });
-
     return () => {
-      socket.off("userData");
       socket.off("newMessage");
       socket.off("messageDeleted");
       socket.off("error");
@@ -283,15 +298,15 @@ const ChatProvider = ({ children }) => {
       socket.off("groupMemberAdded");
     };
     // eslint-disable-next-line
-  }, [chatting]);
+  }, [chatting, user]);
 
   useEffect(() => {
     if (user) {
       socket.emit("userData", user);
-      socket.emit("getChats", user?.username);
       socket.on("connect", () => {
         socket.emit("userData", user);
       });
+      if (user?.id) socket.emit("getChats", user?.username);
     }
     socket.on("tokenNotValid", () => {
       localStorage.removeItem("user");
@@ -300,8 +315,24 @@ const ChatProvider = ({ children }) => {
       setChats([]);
       setChatting(null);
     });
+    socket.on("userData", (data) => {
+      if (!user) return;
+      if (
+        user.name === data.name &&
+        user.image === data.image &&
+        user?.id === data?.id
+      )
+        return;
+      const updatedUser = {
+        ...user,
+        id: data.id,
+      };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    });
     return () => {
       socket.off("tokenNotValid");
+      socket.off("userData");
       socket.off("connect");
     };
   }, [user]);
@@ -326,20 +357,10 @@ const ChatProvider = ({ children }) => {
     socket.on("notFound", () => {
       alert("User not found!");
     });
-    socket.on("updated", ({ name, image }) => {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (!user) return;
-      if (user.name === name && user.image === image) return;
-      user.name = name;
-      user.image = image;
-      localStorage.setItem("user", JSON.stringify(user));
-      setUser(user);
-    });
 
     return () => {
       socket.off("userAdded");
       socket.off("notFound");
-      socket.off("updated");
     };
   }, [user, chats]);
 
@@ -438,16 +459,6 @@ const ChatProvider = ({ children }) => {
       socket.emit("addingUser", { userToAdd, user: user?.username });
       return resolve("success");
     });
-  };
-
-  const updateUser = (newName, newImage) => {
-    if (newName || newImage) {
-      socket.emit("updateMe", {
-        username: user?.username,
-        name: newName ? newName : user?.name,
-        image: newImage ? newImage : user?.image,
-      });
-    }
   };
 
   const callUser = (type) => {
@@ -679,6 +690,13 @@ const ChatProvider = ({ children }) => {
     audio.play();
   };
 
+  const logout = () => {
+    localStorage.removeItem("user");
+    localStorage.setItem("chats", JSON.stringify([]));
+    setChats([]);
+    setUser(null);
+  };
+
   const value = {
     user,
     chats,
@@ -735,6 +753,7 @@ const ChatProvider = ({ children }) => {
     audio,
     clear,
     setClear,
+    logout,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

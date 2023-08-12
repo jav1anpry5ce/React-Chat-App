@@ -1,21 +1,31 @@
 const mysql = require("mysql2");
 require("dotenv").config();
 
-const con = mysql.createConnection({
-  host: process.env.HOST || "localhost",
-  user: process.env.USER || "root",
-  port: process.env.DBPORT || 3306,
-  password: process.env.PASSWORD || "",
-  database: process.env.DB || "chat_app",
-});
+const DB_CONFIG = {
+  host: process.env.HOST,
+  user: process.env.USER,
+  port: process.env.DBPORT,
+  password: process.env.PASSWORD,
+  database: process.env.DB,
+};
 
-const openConnection = () => {
+let con;
+
+const handleConnect = () => {
+  con = mysql.createConnection(DB_CONFIG);
+
   con.connect((err) => {
-    if (err) throw err;
+    if (err) setTimeout(handleConnect, 5000);
+  });
+
+  con.on("error", (err) => {
+    console.error(err);
+    if (err.code === "PROTOCOL_CONNECTION_LOST") handleConnect();
+    else throw new Error(err);
   });
 };
 
-openConnection();
+handleConnect();
 
 const get_or_create_user = (data) => {
   return new Promise((resolve, reject) => {
@@ -42,7 +52,7 @@ const get_or_create_user = (data) => {
 };
 
 const createUser = (data) => {
-  const sql = `INSERT INTO users (username, name, image, password) VALUES ('${data.username}', '${data.name}', '${data.image_url}', '${data.password}')`;
+  const sql = `INSERT INTO users (username, name, password) VALUES ('${data.username}', '${data.name}', '${data.password}')`;
   return new Promise((resolve, reject) => {
     con.query(sql, (err) => {
       if (err) return reject(err);
@@ -66,6 +76,24 @@ const getUser = (username) => {
   });
 };
 
+const getUserByToken = (token) => {
+  const sql = `SELECT username FROM token WHERE token = '${token}' LIMIT 1`;
+  return new Promise((resolve, reject) => {
+    try {
+      con.query(sql, async (err, result) => {
+        if (err) return reject(err);
+        if (result && result.length > 0) {
+          const user = await getUser(result[0].username);
+          return resolve(user);
+        }
+        return reject("NotFound");
+      });
+    } catch (err) {
+      return reject(err);
+    }
+  });
+};
+
 const addUser = (username) => {
   const sql = `SELECT * FROM users WHERE username = '${username}'`;
   return new Promise((resolve, reject) => {
@@ -81,13 +109,14 @@ const addUser = (username) => {
   });
 };
 
-const updateUser = (username, name, image) => {
-  const sql = `UPDATE users SET name = "${name}", image = "${image}" WHERE username = "${username}"`;
+const updateUser = (username, name) => {
+  const sql = `UPDATE users SET name = "${name}" WHERE username = "${username}"`;
   return new Promise((resolve, reject) => {
     try {
-      con.query(sql, (err) => {
+      con.query(sql, async (err) => {
         if (err) return reject(err);
-        return resolve("Success");
+        const user = await getUser(username);
+        return resolve(user);
       });
     } catch (err) {
       return reject(err);
@@ -494,6 +523,29 @@ const verifyToken = (token) => {
   });
 };
 
+const validateToken = (token) => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT * FROM token WHERE token = '${token}'`;
+    con.query(sql, (err, result) => {
+      if (err) return reject(false);
+      if (result.length === 0) return reject(false);
+      return resolve(true);
+    });
+  });
+};
+
+const uploadPhoto = (token, image_url) => {
+  return new Promise(async (resolve, reject) => {
+    const user = await getUserByToken(token);
+    const sql = `UPDATE users SET image = '${image_url}' WHERE username = '${user.username}'`;
+    con.query(sql, (err) => {
+      if (err) return reject(err);
+    });
+    const updatedUser = await getUserByToken(token);
+    resolve(updatedUser);
+  });
+};
+
 module.exports = {
   createConversation,
   getConversation,
@@ -503,6 +555,7 @@ module.exports = {
   addUser,
   updateUser,
   getUser,
+  getUserByToken,
   createGroupChat,
   deleteMessage,
   addMemberToGroup,
@@ -518,4 +571,6 @@ module.exports = {
   updateGroupChat,
   login,
   verifyToken,
+  uploadPhoto,
+  validateToken,
 };

@@ -83,7 +83,7 @@ INSERT INTO `message` (`id`, `type`, `name`, `file`, `text`, `data`) VALUES
 ('5xEJsYoOG', 'text', NULL, NULL, 'hey', NULL),
 ('5XStwiF-B', 'text', NULL, NULL, 'ok', NULL),
 ('6LffQhuJj', 'text', NULL, NULL, 'wow', NULL),
-('6rT_lyVxi', 'video', 'out.mp4', 'http://localhost:5000/1652283003074-out.mp4', 'HEY HEY HEY', NULL),
+('6rT_lyVxi', 'video', 'out.mp4', 'http://192.168.1.182:5000/1652283003074-out.mp4', 'HEY HEY HEY', NULL),
 ('6WFioLl5r', 'text', NULL, NULL, 'hey', NULL),
 ('7dz30N828', 'text', NULL, NULL, 'hi', NULL),
 ('7q3OEnTz2', 'text', NULL, NULL, 'ok', NULL),
@@ -137,7 +137,7 @@ INSERT INTO `message` (`id`, `type`, `name`, `file`, `text`, `data`) VALUES
 ('Eog1l0sf-', 'text', NULL, NULL, 'hi', NULL),
 ('EoNd_MMnf', 'text', NULL, NULL, 'hello', NULL),
 ('EPjp2VlmQ', 'text', NULL, NULL, 'ntn much you??', NULL),
-('ETE-T6HXM', 'audio', NULL, NULL, NULL, 'http://localhost:5000/1652282350184.wav'),
+('ETE-T6HXM', 'audio', NULL, NULL, NULL, 'http://192.168.1.182:5000/1652282350184.wav'),
 ('EvX1pz4jl', 'text', NULL, NULL, 'aa', NULL),
 ('EWzHJGATU', 'text', NULL, NULL, 'hi', NULL),
 ('exMMHBHH_', 'text', NULL, NULL, 'ntn much you??', NULL),
@@ -210,11 +210,11 @@ INSERT INTO `message` (`id`, `type`, `name`, `file`, `text`, `data`) VALUES
 ('NgSa1W_uV', 'text', NULL, NULL, 'hi', NULL),
 ('nXxNdiDOy', 'text', NULL, NULL, 'LOL!!!!', NULL),
 ('Nz9ECOhib', 'text', NULL, NULL, '😨💀', NULL),
-('NZSk9XM_q', 'image', 'passport_size.jpg', 'http://localhost:5000/1652219221953-passport_size.jpg', '', NULL),
+('NZSk9XM_q', 'image', 'passport_size.jpg', 'http://192.168.1.182:5000/1652219221953-passport_size.jpg', '', NULL),
 ('O9zQep6oa', 'text', NULL, NULL, 'u there?', NULL),
 ('OB0UVF6hT', 'text', NULL, NULL, 'HELLO', NULL),
 ('ODhl-b9Rf', 'text', NULL, NULL, '\"HEY\"', NULL),
-('OH5UkCiEs', 'video', 'pryce.javaughn.HCI.mp4', 'http://localhost:5000/1652219407539-pryce.javaughn.HCI.mp4', 'Watch this', NULL),
+('OH5UkCiEs', 'video', 'pryce.javaughn.HCI.mp4', 'http://192.168.1.182:5000/1652219407539-pryce.javaughn.HCI.mp4', 'Watch this', NULL),
 ('oJzvw6_hh', 'text', NULL, NULL, 'cool', NULL),
 ('opqG4SYPi', 'text', NULL, NULL, 'hey', NULL),
 ('oV4yyfo3d', 'text', NULL, NULL, 'hi', NULL),
@@ -224,7 +224,7 @@ INSERT INTO `message` (`id`, `type`, `name`, `file`, `text`, `data`) VALUES
 ('pC2GiuRUr', 'text', NULL, NULL, 'hello', NULL),
 ('PUQgc3tGm', 'text', NULL, NULL, 'hi', NULL),
 ('PUzngDOeF', 'text', NULL, NULL, 'hi', NULL),
-('PXI5jp4pb', 'video', '2021-10-13 16-22-18.mkv', 'http://localhost:5000/1652219299180-2021-10-13 16-22-18.mkv', '', NULL),
+('PXI5jp4pb', 'video', '2021-10-13 16-22-18.mkv', 'http://192.168.1.182:5000/1652219299180-2021-10-13 16-22-18.mkv', '', NULL),
 ('qA1bk-3Xm', 'text', NULL, NULL, 'hi', NULL),
 ('qjAH5WOf94', 'text', NULL, NULL, '😨', NULL),
 ('qOoQqgasS', 'text', NULL, NULL, 'NTN MUCH YOU!!!!!!!!!!!', NULL),
@@ -301,7 +301,7 @@ INSERT INTO `message` (`id`, `type`, `name`, `file`, `text`, `data`) VALUES
 ('_aF93fpIT', 'text', NULL, NULL, 'wow', NULL),
 ('_chaiNjH2', 'text', NULL, NULL, 'yasssssssssssssssssssssss', NULL),
 ('_Lt_G5fBY', 'text', NULL, NULL, 'hi', NULL),
-('_zQnZtDgv', 'image', '2018-01-21 (1).png', 'http://localhost:5000/1652630027672-2018-01-21 (1).png', '', NULL);
+('_zQnZtDgv', 'image', '2018-01-21 (1).png', 'http://192.168.1.182:5000/1652630027672-2018-01-21 (1).png', '', NULL);
 
 -- --------------------------------------------------------
 

@@ -35,7 +35,7 @@ export default function ViewGroupInfo() {
       return;
     }
     axios
-      .get(`http://localhost:5000/api/users/${username}`)
+      .get(`http://api.chatapp.home/api/users/${username}`)
       .then((res) => {
         if (res.data) {
           const member = res.data;
@@ -58,7 +58,7 @@ export default function ViewGroupInfo() {
       });
     // axios
     //   .get(
-    //     `http://localhost:5000/api/users/${e.target.parentElement.children[0].value}`
+    //     `http://192.168.1.182:5000/api/users/${e.target.parentElement.children[0].value}`
     //   )
     //   .then((res) => {
     //     if (res.data) {

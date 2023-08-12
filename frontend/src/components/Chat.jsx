@@ -20,7 +20,7 @@ function scrollToBottom() {
 }
 
 export default function Chat() {
-  const { socket, chatting, user, setShow, chats, hide, setChatting } =
+  const { chatting, user, setShow, chats, hide, setChatting } =
     useContext(ChatContext);
   const [searchParams] = useSearchParams();
   const [typing, setTyping] = useState(false);
@@ -40,12 +40,6 @@ export default function Chat() {
   }, [chats, chatting]);
 
   useEffect(() => {
-    setTimeout(() => {
-      if (typing) setTyping(false);
-    }, 5000);
-  }, [typing]);
-
-  useEffect(() => {
     var listener;
     const s = document.getElementById("scroll");
     if (chatting) {
@@ -56,24 +50,14 @@ export default function Chat() {
         setBottom(bottom);
       });
     }
-    socket.on("usertyping", (data) => {
-      if (chatting) {
-        if (data.typing === chatting.username) {
-          if (!typing) setTyping(true);
-        } else {
-          if (typing) setTyping(false);
-        }
-      }
-    });
     return () => {
-      socket.off("usertyping");
       if (listener) s.removeEventListener("scroll", listener);
     };
     // eslint-disable-next-line
   }, [chatting, typing]);
 
   useEffect(() => {
-    const chatting = searchParams.get("id")
+    const chatting = searchParams.get("id");
     const chat = chats?.find((u) => u.id === chatting);
     if (chat) {
       setChatting(chat);
@@ -106,7 +90,7 @@ export default function Chat() {
               className="scroll relative h-full flex-1 overflow-y-auto overflow-x-hidden"
               id="scroll"
             >
-              <ul className="space-y-2 px-4 py-3">
+              <ul className="space-y-2 px-1 py-3 md:px-4">
                 {chat?.messages?.map((item, index) => (
                   <li key={index}>
                     {new Date(item.time).toDateString() !==

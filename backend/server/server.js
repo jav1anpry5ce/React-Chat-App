@@ -9,6 +9,9 @@ const sql = require("./sql");
 const express = require("express");
 const bodyParser = require("body-parser");
 const router = require("./routes");
+const fileUpload = require("express-fileupload");
+const { instrument } = require("@socket.io/admin-ui");
+const IP = process.env.IP;
 
 const app = express();
 
@@ -21,6 +24,7 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "/files")));
+app.use(fileUpload());
 app.use("/api", router);
 app.use("/", function (req, res) {
   res.sendFile(path.join(__dirname, "/files"));
@@ -130,15 +134,6 @@ io.on("connection", (socket) => {
       });
   });
 
-  socket.on("updateMe", ({ username, name, image }) => {
-    sql.updateUser(username, name, image).then(() => {
-      const users = usersList.filter((user) => user.username === username);
-      users.forEach((user) => {
-        io.to(user.id).emit("updated", { name, image });
-      });
-    });
-  });
-
   socket.on("typing", (data) => {
     const users = usersList.filter((user) => user.username === data.username);
     users.forEach((user) => {
@@ -162,7 +157,7 @@ io.on("connection", (socket) => {
             if (err) console.log(err);
             let message = {
               ...data.message,
-              file: `http://localhost:5000/${date}-${data.message.name}`,
+              file: `http://${IP}/${date}-${data.message.name}`,
             };
             const newMessage = {
               id: data.id,
@@ -172,19 +167,27 @@ io.on("connection", (socket) => {
               message: message,
               time: data.time,
             };
-            sql.createMessage(newMessage).then(() => {
-              sql
-                .getConversationById(data.conversationId)
-                .then((conversation) => {
-                  const users = JSON.parse(conversation.users);
-                  users.map((user) => {
-                    const ids = usersList.filter((u) => u.username === user);
-                    ids.map((id) => {
-                      io.to(id.id).emit("newMessage", newMessage);
+            sql
+              .createMessage(newMessage)
+              .then(() => {
+                sql
+                  .getConversationById(data.conversationId)
+                  .then((conversation) => {
+                    const users = JSON.parse(conversation.users);
+                    users.map((user) => {
+                      const ids = usersList.filter((u) => u.username === user);
+                      ids.map((id) => {
+                        io.to(id.id).emit("newMessage", newMessage);
+                      });
                     });
+                  })
+                  .catch((err) => {
+                    console.error(err);
                   });
-                });
-            });
+              })
+              .catch((err) => {
+                console.error(err);
+              });
           }
         );
       } else if (data.message.type === "audio") {
@@ -198,7 +201,7 @@ io.on("connection", (socket) => {
             if (err) console.log(err);
             let message = {
               ...data.message,
-              data: `http://localhost:5000/${date}.wav`,
+              data: `http://${IP}/${date}.wav`,
             };
             const newMessage = {
               id: data.id,
@@ -208,19 +211,27 @@ io.on("connection", (socket) => {
               message: message,
               time: data.time,
             };
-            sql.createMessage(newMessage).then(() => {
-              sql
-                .getConversationById(data.conversationId)
-                .then((conversation) => {
-                  const users = JSON.parse(conversation.users);
-                  users.map((user) => {
-                    const ids = usersList.filter((u) => u.username === user);
-                    ids.forEach((id) => {
-                      io.to(id.id).emit("newMessage", newMessage);
+            sql
+              .createMessage(newMessage)
+              .then(() => {
+                sql
+                  .getConversationById(data.conversationId)
+                  .then((conversation) => {
+                    const users = JSON.parse(conversation.users);
+                    users.map((user) => {
+                      const ids = usersList.filter((u) => u.username === user);
+                      ids.forEach((id) => {
+                        io.to(id.id).emit("newMessage", newMessage);
+                      });
                     });
+                  })
+                  .catch((err) => {
+                    console.error(err);
                   });
-                });
-            });
+              })
+              .catch((err) => {
+                console.error(err);
+              });
           }
         );
       } else {
@@ -232,17 +243,27 @@ io.on("connection", (socket) => {
           message: data.message,
           time: data.time,
         };
-        sql.createMessage(newMessage).then(() => {
-          sql.getConversationById(data.conversationId).then((conversation) => {
-            const users = JSON.parse(conversation.users);
-            users.map((user) => {
-              const ids = usersList.filter((u) => u.username === user);
-              ids.forEach((id) => {
-                io.to(id.id).emit("newMessage", newMessage);
+        sql
+          .createMessage(newMessage)
+          .then(() => {
+            sql
+              .getConversationById(data.conversationId)
+              .then((conversation) => {
+                const users = JSON.parse(conversation.users);
+                users.map((user) => {
+                  const ids = usersList.filter((u) => u.username === user);
+                  ids.forEach((id) => {
+                    io.to(id.id).emit("newMessage", newMessage);
+                  });
+                });
+              })
+              .catch((err) => {
+                console.error(err);
               });
-            });
+          })
+          .catch((err) => {
+            console.error(err);
           });
-        });
       }
     } catch (err) {
       console.log(err);
@@ -255,6 +276,7 @@ io.on("connection", (socket) => {
       io.to(user.id).emit("callUser", {
         signal: data.signalData,
         from: data.from,
+        type: data.type,
         name: data.name,
         image: data.image,
       });
@@ -296,6 +318,7 @@ io.on("connection", (socket) => {
         io.emit("messageDeleted", { messageID, conversationID, message });
       })
       .catch((err) => {
+        console.error(err);
         const users = usersList.filter((user) => user.username === username);
         users.forEach((user) => {
           io.to(user.id).emit("error", { message: err });
@@ -316,7 +339,7 @@ io.on("connection", (socket) => {
             if (err) console.log(err);
             let message = {
               ...data.message,
-              file: `http://localhost:5000/${date}-${data.message.name}`,
+              file: `http://${IP}/${date}-${data.message.name}`,
             };
             const newMessage = {
               id: data.id,
@@ -326,18 +349,28 @@ io.on("connection", (socket) => {
               message: message,
               time: data.time,
             };
-            sql.createMessage(newMessage).then(() => {
-              sql.getGroupMembers(data.conversationId).then((members) => {
-                members.map((member) => {
-                  const users = usersList.filter(
-                    (u) => u.username === member.username
-                  );
-                  users.forEach((user) => {
-                    if (user) io.to(user.id).emit("newMessage", newMessage);
+            sql
+              .createMessage(newMessage)
+              .then(() => {
+                sql
+                  .getGroupMembers(data.conversationId)
+                  .then((members) => {
+                    members.map((member) => {
+                      const users = usersList.filter(
+                        (u) => u.username === member.username
+                      );
+                      users.forEach((user) => {
+                        if (user) io.to(user.id).emit("newMessage", newMessage);
+                      });
+                    });
+                  })
+                  .catch((err) => {
+                    console.error(err);
                   });
-                });
+              })
+              .catch((err) => {
+                console.error(err);
               });
-            });
           }
         );
       } else if (data.message.type === "audio") {
@@ -351,7 +384,7 @@ io.on("connection", (socket) => {
             if (err) console.log(err);
             let message = {
               ...data.message,
-              data: `http://localhost:5000/${date}.wav`,
+              data: `http://${IP}/${date}.wav`,
             };
             const newMessage = {
               id: data.id,
@@ -361,18 +394,28 @@ io.on("connection", (socket) => {
               message: message,
               time: data.time,
             };
-            sql.createMessage(newMessage).then(() => {
-              sql.getGroupMembers(data.conversationId).then((members) => {
-                members.map((member) => {
-                  const users = usersList.filter(
-                    (u) => u.username === member.username
-                  );
-                  users.forEach((user) => {
-                    io.to(user.id).emit("newMessage", newMessage);
+            sql
+              .createMessage(newMessage)
+              .then(() => {
+                sql
+                  .getGroupMembers(data.conversationId)
+                  .then((members) => {
+                    members.map((member) => {
+                      const users = usersList.filter(
+                        (u) => u.username === member.username
+                      );
+                      users.forEach((user) => {
+                        io.to(user.id).emit("newMessage", newMessage);
+                      });
+                    });
+                  })
+                  .catch((err) => {
+                    console.error(err);
                   });
-                });
+              })
+              .catch((err) => {
+                console.error(err);
               });
-            });
           }
         );
       } else {
@@ -384,21 +427,31 @@ io.on("connection", (socket) => {
           message: data.message,
           time: data.time,
         };
-        sql.createMessage(newMessage).then(() => {
-          sql.getGroupMembers(data.conversationId).then((members) => {
-            members.map((member) => {
-              const users = usersList.filter(
-                (u) => u.username === member.username
-              );
-              users.forEach((user) => {
-                io.to(user.id).emit("newMessage", newMessage);
+        sql
+          .createMessage(newMessage)
+          .then(() => {
+            sql
+              .getGroupMembers(data.conversationId)
+              .then((members) => {
+                members.map((member) => {
+                  const users = usersList.filter(
+                    (u) => u.username === member.username
+                  );
+                  users.forEach((user) => {
+                    io.to(user.id).emit("newMessage", newMessage);
+                  });
+                });
+              })
+              .catch((err) => {
+                console.error(err);
               });
-            });
+          })
+          .catch((err) => {
+            console.error(err);
           });
-        });
       }
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   });
 
@@ -448,14 +501,19 @@ io.on("connection", (socket) => {
   });
 
   socket.on("changeGroup", (data) => {
-    sql.updateGroupChat(data).then((group) => {
-      group.members.forEach((member) => {
-        const users = usersList.filter((u) => u.username === member.username);
-        users.forEach((user) => {
-          io.to(user.id).emit("groupUpdated", group);
+    sql
+      .updateGroupChat(data)
+      .then((group) => {
+        group.members.forEach((member) => {
+          const users = usersList.filter((u) => u.username === member.username);
+          users.forEach((user) => {
+            io.to(user.id).emit("groupUpdated", group);
+          });
         });
+      })
+      .catch((err) => {
+        console.error(err);
       });
-    });
   });
 
   socket.on("addGroupMember", ({ groupId, username }) => {
@@ -474,9 +532,9 @@ io.on("connection", (socket) => {
               });
             });
           })
-          .catch((err) => console.log(err));
+          .catch((err) => console.error(err));
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.error(err));
   });
 
   // setInterval(() => {
@@ -494,16 +552,18 @@ io.on("connection", (socket) => {
   });
 });
 
+instrument(io, {
+  auth: {
+    type: "basic",
+    username: "admin",
+    password: "$2a$10$FccnclEN.cFsIfgz/GPZEe9uSnVGH1khCB16KaSql6RS0My4Of36O", // "changeit" encrypted with bcrypt
+  },
+});
 
-
-try {
-  server.listen(process.env.PORT || 5000, process.env.IP, () =>
-    console.log(
-      `Server has started on ${process.env.IP} using port ${process.env.PORT}`
-    )
-  );
-} catch (err) {
-  console.log(err);
-}
+server.listen(process.env.PORT || 5000, "0.0.0.0", () =>
+  console.log(
+    `Server has started on ${process.env.IP} using port ${process.env.PORT}`
+  )
+);
 
 
