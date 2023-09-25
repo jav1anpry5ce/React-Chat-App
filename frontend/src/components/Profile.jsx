@@ -29,7 +29,7 @@ export default function Profile() {
     formData.append("name", nameInput);
     try {
       const user = await axios.post(
-        `${process.env.REACT_APP_URL}/api/user/update`,
+        `${process.env.REACT_APP_CHATAPP_API}/api/user/update`,
         formData,
         config
       );
@@ -54,7 +54,7 @@ export default function Profile() {
     formData.append("image", image);
     try {
       const user = await axios.post(
-        `${process.env.REACT_APP_URL}/api/upload`,
+        `${process.env.REACT_APP_CHATAPP_API}/api/upload`,
         formData,
         config
       );

@@ -6,6 +6,10 @@ COPY package.json .
 
 RUN npm install -f
 
+ARG REACT_APP_CHATAPP_API
+
+ENV REACT_APP_CHATAPP_API=$REACT_APP_CHATAPP_API
+
 COPY . .
 
 RUN npm run build

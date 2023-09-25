@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import { getData, storeData } from "../utils/storage";
-const IP = process.env.REACT_APP_URL;
+const IP = process.env.REACT_APP_CHATAPP_API;
 const shortid = require("shortid");
 const socket = io(IP);
 
