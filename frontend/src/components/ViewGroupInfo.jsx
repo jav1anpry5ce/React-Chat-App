@@ -35,7 +35,9 @@ export default function ViewGroupInfo() {
       return;
     }
     axios
-      .get(`${process.env.REACT_APP_CHATAPP_API}/api/users/${username}`)
+      .get(
+        `${window.location.protocol}//api.chatapp.home/api/users/${username}`
+      )
       .then((res) => {
         if (res.data) {
           const member = res.data;
