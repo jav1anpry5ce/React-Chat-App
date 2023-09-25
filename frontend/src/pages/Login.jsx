@@ -26,7 +26,7 @@ export default function Login() {
     };
 
     axios
-      .post("http://api.chatapp.home/api/login", data, config)
+      .post(`${process.env.REACT_APP_URL}/api/login`, data, config)
       .then((res) => {
         socket.emit("getChats", res.data.username);
         const user = {

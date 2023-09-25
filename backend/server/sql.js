@@ -21,6 +21,8 @@ const handleConnect = () => {
   con.on("error", (err) => {
     console.error(err);
     if (err.code === "PROTOCOL_CONNECTION_LOST") handleConnect();
+    if (err.code === "ECONNRESET") handleConnect();
+    if (err.code === "ETIMEDOUT") handleConnect();
     else throw new Error(err);
   });
 };

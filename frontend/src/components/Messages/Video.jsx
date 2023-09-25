@@ -12,7 +12,7 @@ export default function Video({ data, username }) {
         data?.sender.username === username
           ? "bg-blue-500/90"
           : "bg-slate-800/90"
-      } max-h-auto relative aspect-auto max-w-[17rem] rounded-md text-white md:max-w-[35rem]`}
+      } relative aspect-auto max-h-[450px] max-w-[650px] rounded-md text-white`}
       onContextMenu={(e) => {
         e.preventDefault();
         setClicked(true);
@@ -35,7 +35,7 @@ export default function Video({ data, username }) {
         controls
         className={`${
           data?.message.text ? "rounded-t-md" : "rounded-md"
-        } min-h-[7rem] w-auto min-w-[12rem] cursor-pointer object-contain mix-blend-normal`}
+        } aspect-auto max-h-[450px] w-auto max-w-[650px] cursor-pointer object-cover mix-blend-normal`}
       />
       {data?.message.text && (
         <p className="break-words p-2 pb-4 font-sans">{data?.message.text}</p>

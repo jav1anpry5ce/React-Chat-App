@@ -8,7 +8,7 @@ const shortid = require("shortid");
 
 const ChatContext = createContext();
 
-const socket = io("http://api.chatapp.home");
+const socket = io(process.env.REACT_APP_URL);
 
 const ChatProvider = ({ children }) => {
   const [chats, setChats] = useState(
@@ -44,7 +44,7 @@ const ChatProvider = ({ children }) => {
   const screenTrackRef = useRef();
 
   const getUpdateUser = async (user) => {
-    const uUser = await axios.get(`http://api.chatapp.home/api/user`, {
+    const uUser = await axios.get(`${process.env.REACT_APP_URL}/api/user`, {
       headers: {
         Authorization: `${user.token}`,
       },
@@ -231,6 +231,10 @@ const ChatProvider = ({ children }) => {
         localStorage.setItem("chats", JSON.stringify(newChats));
         setChats(newChats);
       }
+    });
+
+    socket.on("test", (data) => {
+      console.log(data);
     });
 
     socket.on("chats", (data) => {

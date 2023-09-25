@@ -47,7 +47,7 @@ export default function CreateGroupInterface() {
     }
     axios
       .get(
-        `http://api.chatapp.home/api/users/${e.target.parentElement.children[0].value}`
+        `${process.env.REACT_APP_URL}/api/users/${e.target.parentElement.children[0].value}`
       )
       .then((res) => {
         if (res.data) {

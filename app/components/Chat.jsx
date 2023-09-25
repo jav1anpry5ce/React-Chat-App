@@ -10,7 +10,15 @@ export default function Chat({ chat }) {
   };
 
   return (
-    <Pressable style={styles.container} onPress={onPress}>
+    <Pressable
+      style={({ pressed }) => [
+        {
+          backgroundColor: pressed ? "rgba(210, 230, 255, 0.1)" : "transparent",
+        },
+        styles.container,
+      ]}
+      onPress={onPress}
+    >
       <Image source={{ uri: chat.image }} style={styles.image} />
       <View style={styles.column}>
         <Text style={styles.name}>{chat.name}</Text>
@@ -49,13 +57,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    borderBottomColor: "#64748b",
-    borderBottomWidth: 1,
+    borderRadius: 8,
+    padding: 4,
   },
   column: {
     flex: 1,
     flexDirection: "column",
     alignItems: "flex-start",
+    gap: 4,
+    paddingBottom: 10,
+    borderBottomColor: "#64748b",
+    borderBottomWidth: 1,
   },
   image: {
     width: 50,

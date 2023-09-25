@@ -29,7 +29,7 @@ export default function Profile() {
     formData.append("name", nameInput);
     try {
       const user = await axios.post(
-        "http://api.chatapp.home/api/user/update",
+        `${process.env.REACT_APP_URL}/api/user/update`,
         formData,
         config
       );
@@ -54,7 +54,7 @@ export default function Profile() {
     formData.append("image", image);
     try {
       const user = await axios.post(
-        "http://api.chatapp.home/api/upload",
+        `${process.env.REACT_APP_URL}/api/upload`,
         formData,
         config
       );
@@ -148,6 +148,7 @@ export default function Profile() {
               className="mx-auto aspect-square w-[165px] rounded-full object-cover"
               ref={imageRef}
             />
+            <p className="text-center">@{user.username}</p>
             <div className="flex items-center justify-center gap-1">
               <div className="flex w-full items-center justify-center">
                 <label

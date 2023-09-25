@@ -15,7 +15,8 @@ router.post("/signup", (req, res) => {
       .then(() => {
         res.status(201).send({ message: "User created" });
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error(err);
         res.status(500).send({ username: "username is not available" });
       });
   });
