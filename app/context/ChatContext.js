@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import { getData, storeData } from "../utils/storage";
-const IP = `${window.location.protocol}//api.chatapp.home`;
+const IP = `http://api.chatapp.home`;
 const shortid = require("shortid");
 const socket = io(IP);
 
