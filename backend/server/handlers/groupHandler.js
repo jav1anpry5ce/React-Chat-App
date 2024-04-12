@@ -180,9 +180,11 @@ async function textHandler(messageData, emitter, pubClient) {
     const groupMembers = await sql.getGroupMembers(message.conversationId);
     const users = await getUsers(pubClient);
     users.forEach((user) => {
-      if (groupMembers.includes(user.username)) {
-        emitter.to(user.id).emit("newMessage", message);
-      }
+      groupMembers.forEach((member) => {
+        if (member.username === user.username) {
+          emitter.to(user.id).emit("newMessage", message);
+        }
+      });
     });
   } catch (err) {
     console.error(err);
