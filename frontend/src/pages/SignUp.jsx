@@ -37,7 +37,7 @@ export default function SignUp() {
     };
 
     axios
-      .post(`http://api.chatapp.home/api/signup`, data, config)
+      .post(`http://localhost:5000/api/signup`, data, config)
       .then(() => {
         setLoading(false);
         setError(null);

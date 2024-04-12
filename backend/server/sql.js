@@ -221,13 +221,14 @@ const getChat = async (chatId, username) => {
 };
 
 const createGroupChat = async (data) => {
-  const sql = `INSERT INTO groups (id, name, image) VALUES (?, ?, ?)`;
+  const sql = "INSERT INTO `groups` (id, name, image) VALUES (?, ?, ?)";
   return new Promise((resolve, reject) => {
     try {
       con.query(sql, [data.id, data.name, data.image], (err) => {
         if (err) return reject(err);
         data.members.forEach((member) => {
-          const sql = `INSERT INTO members (groupId, username, admin) VALUES (?,?,?)`;
+          const sql =
+            "INSERT INTO `members` (groupId, username, admin) VALUES (?,?,?)";
           con.query(
             sql,
             [data.id, member.username, member?.admin || 0],
@@ -282,9 +283,9 @@ const getGroupMembers = async (id) => {
 };
 
 getGroup = async (id) => {
-  const sql = `SELECT * FROM groups WHERE id = '${id}'`;
+  const sql = "SELECT * FROM `groups` WHERE id = ?";
   return new Promise((resolve, reject) => {
-    con.query(sql, (err, result) => {
+    con.query(sql, [id], (err, result) => {
       if (err) return reject(err);
       return resolve(result[0]);
     });
@@ -485,8 +486,8 @@ const get_or_create_token = ({ username, token }) => {
 
 const updateGroupChat = (data) => {
   return new Promise(async (resolve, reject) => {
-    const sql = `UPDATE groups SET name = '${data.name}', image = '${data.image}' WHERE id = '${data.id}'`;
-    con.query(sql, async (err) => {
+    const sql = "UPDATE `groups` SET name = ?, image = ? WHERE id = ?";
+    con.query(sql, [data.name, data.image, data.id], async (err) => {
       if (err) return reject(err);
       const promises = data.members.map(async (member) => {
         return await addMemberToGroup({
