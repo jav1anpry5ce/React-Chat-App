@@ -8,7 +8,7 @@ const shortid = require("shortid");
 
 const ChatContext = createContext();
 
-const socket = io(`http://localhost:5000`, {
+const socket = io(`${process.env.REACT_APP_API_URI}`, {
   transports: ["websocket"],
 });
 
@@ -46,7 +46,7 @@ const ChatProvider = ({ children }) => {
   const screenTrackRef = useRef();
 
   const getUpdateUser = async (user) => {
-    const uUser = await axios.get(`http://localhost:5000/api/user`, {
+    const uUser = await axios.get(`${process.env.REACT_APP_API_URI}/api/user`, {
       headers: {
         Authorization: `${user.token}`,
       },
@@ -704,6 +704,20 @@ const ChatProvider = ({ children }) => {
     setUser(null);
   };
 
+  const fetchMoreMessages = (nextPageUrl) => {
+    return new Promise((resolve, reject) => {
+      axios
+        .get(nextPageUrl, {
+          headers: {
+            Authorization: `${user.token}`,
+          },
+        })
+        .then((res) => {
+          return resolve(res.data.messages);
+        });
+    });
+  };
+
   const value = {
     user,
     chats,
@@ -761,6 +775,7 @@ const ChatProvider = ({ children }) => {
     clear,
     setClear,
     logout,
+    fetchMoreMessages,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

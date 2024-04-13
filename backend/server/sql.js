@@ -178,13 +178,20 @@ const getChats = async (username) => {
           )[0];
           const user = await getUser(chatUser);
           const messages = await getConversationMessages(res.id);
+          const nextPageUrl = await calculateNextPageUrl(res.id);
           conversation.name = user.name;
           conversation.image = user.image;
           conversation.username = user.username;
           conversation.messages = messages;
           conversation.unread = 0;
           conversation.lastMessage = messages?.at(-1)?.message;
-          return resolve(conversation);
+          conversation.nextPageUrl = nextPageUrl;
+          const chat = {
+            chatType: "private",
+            ...conversation,
+            nextPageUrl,
+          };
+          return resolve(chat);
         });
       });
       Promise.all(promises).then((result) => {
@@ -206,12 +213,20 @@ const getChat = async (chatId, username) => {
         )[0];
         const user = await getUser(chatUser);
         const messages = await getConversationMessages(chatId);
+        const nextPageUrl = await calculateNextPageUrl(chatId);
         conversation.name = user.name;
         conversation.image = user.image;
         conversation.username = user.username;
         conversation.messages = messages;
         conversation.lastMessage = messages?.at(-1)?.message;
-        return resolve(conversation);
+        conversation.nextPageUrl = nextPageUrl;
+        const chat = {
+          chatType: "private",
+          ...conversation,
+          nextPageUrl,
+        };
+        console.log(chat);
+        return resolve(chat);
       } else {
         const groupChat = await getGroupChatById(chatId);
         if (groupChat) return resolve(groupChat);
@@ -301,12 +316,17 @@ const getGroupChat = async (username) => {
         const group = await getGroup(res.groupId);
         const members = await getGroupMembers(res.groupId);
         const messages = await getGroupMessages(res.groupId);
+        const nextPageUrl = await calculateNextPageUrl(res.groupId);
         group.members = members;
         group.messages = messages;
-        group.chatType = "group";
         group.unread = 0;
         group.lastMessage = messages?.at(-1)?.message;
-        return group;
+        const groupChat = {
+          chatType: "group",
+          ...group,
+          nextPageUrl,
+        };
+        return groupChat;
       });
       Promise.all(promises).then((res) => {
         return resolve(res);
@@ -332,27 +352,33 @@ const getGroupChatById = async (id) => {
   });
 };
 
-const getGroupMessages = async (id) => {
-  const sql = `SELECT * FROM messages WHERE conversationId = '${id}' ORDER BY time ASC`;
-  return new Promise((resolve, reject) => {
-    con.query(sql, (err, result) => {
-      if (err) return reject(err);
-      const promises = result.map(async (res) => {
-        const message = await getMessage(res.message);
-        const sender = await getUser(res.sender);
-        return {
-          id: res.id,
-          groupId: res.conversationId,
-          sender: sender,
-          message: message,
-          time: res.time,
-        };
-      });
-      Promise.all(promises).then((res) => {
-        return resolve(res);
+const getGroupMessages = async (id, limit = 30, offset = 0) => {
+  try {
+    const sql = `SELECT * FROM messages WHERE conversationId = '${id}' ORDER BY time DESC LIMIT ${limit} OFFSET ${offset}`;
+    return new Promise((resolve, reject) => {
+      con.query(sql, (err, result) => {
+        if (err) return reject(err);
+        const promises = result
+          .sort((a, b) => new Date(a.time) - new Date(b.time))
+          .map(async (res) => {
+            const message = await getMessage(res.message);
+            const sender = await getUser(res.sender);
+            return {
+              id: res.id,
+              groupId: res.conversationId,
+              sender: sender,
+              message: message,
+              time: res.time,
+            };
+          });
+        Promise.all(promises).then((res) => {
+          return resolve(res);
+        });
       });
     });
-  });
+  } catch (err) {
+    return reject(err);
+  }
 };
 
 const getMessage = (id) => {
@@ -369,36 +395,60 @@ const getMessage = (id) => {
   });
 };
 
-const conversationMessages = (id) => {
-  const sql = `SELECT * FROM messages WHERE conversationId = '${id}' ORDER BY time ASC`;
+const conversationMessages = (id, limit = 30, offset = 0) => {
   return new Promise((resolve, reject) => {
-    try {
-      con.query(sql, async (err, result) => {
-        if (err) reject(err);
-        return resolve(result);
-      });
-    } catch (err) {
-      return reject(err);
-    }
+    const sql = `SELECT * FROM messages WHERE conversationId = '${id}' ORDER BY time DESC LIMIT ${limit} OFFSET ${offset}`;
+    con.query(sql, (err, result) => {
+      if (err) {
+        reject(err); // Handle query errors
+      } else {
+        resolve(result);
+      }
+    });
   });
 };
 
-const getConversationMessages = async (id) => {
-  const results = await conversationMessages(id);
-  const promises = results.map(async (result) => {
-    const message = await getMessage(result.message);
-    const sender = await getUser(result.sender);
-    const receiver = await getUser(result.receiver);
-    return {
-      id: result.id,
-      conversationId: result.conversationId,
-      sender: sender,
-      receiver: receiver,
-      message: message,
-      time: result.time,
-    };
+const calculateNextPageUrl = (id, limit = 30, offset = 0) => {
+  return new Promise((resolve, reject) => {
+    const countSql = `SELECT COUNT(*) as count FROM messages WHERE conversationId = '${id}'`;
+    con.query(countSql, (err, countResult) => {
+      if (err) {
+        reject(err); // Handle query errors
+      } else {
+        const totalCount = countResult[0].count;
+        const nextPage = offset + limit < totalCount ? offset + limit : null;
+        const nextPageUrl = nextPage
+          ? `http://${process.env.IP}/api/messages?conversationId=${id}&offset=${nextPage}&limit=${limit}`
+          : null;
+        resolve(nextPageUrl);
+      }
+    });
   });
-  return await Promise.all(promises);
+};
+
+const getConversationMessages = async (id, limit = 30, offset = 0) => {
+  try {
+    const results = await conversationMessages(id, limit, offset);
+    const promises = results
+      .sort((a, b) => new Date(a.time) - new Date(b.time))
+      .map(async (result) => {
+        const message = await getMessage(result.message);
+        const sender = await getUser(result.sender);
+        const receiver = await getUser(result.receiver);
+        return {
+          id: result.id,
+          conversationId: result.conversationId,
+          sender: sender,
+          receiver: receiver,
+          message: message,
+          time: result.time,
+        };
+      });
+    return await Promise.all(promises);
+  } catch (err) {
+    console.error(err);
+    return;
+  }
 };
 
 const createMessage = (data) => {
@@ -549,6 +599,39 @@ const uploadPhoto = (token, image_url) => {
   });
 };
 
+const getMoreMessages = (conversationId, limit, offset) => {
+  return new Promise(async (resolve, reject) => {
+    const chatType = await checkChatType(conversationId);
+    let messages;
+
+    if (chatType === "group") {
+      messages = await getGroupMessages(conversationId, limit, offset);
+    } else {
+      messages = await getConversationMessages(conversationId, limit, offset);
+    }
+
+    const nextPageUrl = await calculateNextPageUrl(
+      conversationId,
+      limit,
+      offset
+    );
+
+    if (!messages) return reject("No more messages");
+    resolve({ messages, nextPageUrl });
+  });
+};
+
+const checkChatType = (chatId) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM `groups` WHERE id = ?";
+    con.query(sql, [chatId], (err, result) => {
+      if (err) return reject(err);
+      if (result.length > 0) return resolve("group");
+      return resolve("private");
+    });
+  });
+};
+
 module.exports = {
   createConversation,
   getConversation,
@@ -576,4 +659,5 @@ module.exports = {
   verifyToken,
   uploadPhoto,
   validateToken,
+  getMoreMessages,
 };

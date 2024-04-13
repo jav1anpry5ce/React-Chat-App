@@ -5,7 +5,6 @@ const sql = require("../sql");
 const getUsers = require("../getUsers");
 
 module.exports = function (socket, emitter, pubClient) {
-  console.log("messageHandler connected");
   const id = socket.id;
 
   socket.on("chat", async (data) => {

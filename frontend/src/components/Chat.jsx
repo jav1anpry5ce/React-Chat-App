@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import ChatBottom from "./ChatBottom";
 import ChatHead from "./ChatHead";
 import Message from "./Message";
@@ -20,20 +20,30 @@ function scrollToBottom() {
 }
 
 export default function Chat() {
-  const { chatting, user, setShow, chats, hide, setChatting } =
-    useContext(ChatContext);
+  const {
+    chatting,
+    user,
+    setShow,
+    chats,
+    hide,
+    setChatting,
+    fetchMoreMessages,
+  } = useContext(ChatContext);
   const [searchParams] = useSearchParams();
   const [typing, setTyping] = useState(false);
   const [bottom, setBottom] = useState(true);
   const [chat, setChat] = useState({});
+  const divRef = useRef(null);
 
   useEffect(() => {
     const chat = chats?.find((chat) => chat?.id === chatting?.id);
     if (chat) {
       setChat(chat);
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
+      if (chatting) {
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
+      }
       setTyping(false);
     }
     // eslint-disable-next-line
@@ -65,6 +75,41 @@ export default function Chat() {
     // eslint-disable-next-line
   }, []);
 
+  useEffect(() => {
+    const container = divRef.current;
+    if (!container) return;
+
+    function handleScroll() {
+      const scrollTop = container.scrollTop;
+
+      if (scrollTop === 0 && chat && chat.nextPageUrl) {
+        const oldScrollHeight = container.scrollHeight;
+
+        fetchMoreMessages(chat.nextPageUrl).then((newMessages) => {
+          const updatedMessages = [...newMessages.messages, ...chat.messages];
+          setChat((prevChat) => ({
+            ...prevChat,
+            messages: updatedMessages,
+            nextPageUrl: newMessages.nextPageUrl,
+          }));
+
+          setTimeout(() => {
+            const newScrollHeight = container.scrollHeight;
+            const scrollHeightDifference = newScrollHeight - oldScrollHeight;
+
+            container.scrollTop += scrollHeightDifference;
+          }, 0);
+        });
+      }
+    }
+
+    container.addEventListener("scroll", handleScroll);
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, [chat, fetchMoreMessages, divRef]);
+
   return (
     <motion.div
       layout
@@ -89,6 +134,7 @@ export default function Chat() {
             <div
               className="scroll relative h-full flex-1 overflow-y-auto overflow-x-hidden"
               id="scroll"
+              ref={divRef}
             >
               <ul className="space-y-2 px-1 py-3 md:px-4">
                 {chat?.messages?.map((item, index) => (

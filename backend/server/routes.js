@@ -147,4 +147,18 @@ router.post("/upload", async (req, res) => {
     });
 });
 
+router.get("/messages", async (req, res) => {
+  const { conversationId, limit, offset } = req.query;
+  const token = req.headers.authorization;
+  if (!token) return res.status(401).send({ message: "unauthorized" });
+
+  const messages = await sql.getMoreMessages(
+    conversationId,
+    Number(limit),
+    Number(offset)
+  );
+
+  return res.status(200).send({ messages });
+});
+
 module.exports = router;
