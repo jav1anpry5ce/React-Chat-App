@@ -27,7 +27,7 @@ export default function Login({ navigator }) {
     };
 
     axios
-      .post(`http://localhost:5000/api/signup`, data, config)
+      .post(`https://api.chatapp.home/api/signup`, data, config)
       .then(() => {
         setLoading(false);
         navigator.navigate("Login");

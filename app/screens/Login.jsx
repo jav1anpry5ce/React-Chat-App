@@ -25,7 +25,7 @@ export default function Login() {
     };
 
     axios
-      .post(`http://localhost:5000/api/login`, data, config)
+      .post(`https://api.chatapp.home/api/login`, data, config)
       .then((res) => {
         // socket.emit("getChats", res.data.username);
         const user = {

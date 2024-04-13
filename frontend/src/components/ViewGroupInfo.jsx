@@ -35,7 +35,7 @@ export default function ViewGroupInfo() {
       return;
     }
     axios
-      .get(`http://localhost:5000/api/users/${username}`)
+      .get(`https://api.chatapp.home/api/users/${username}`)
       .then((res) => {
         if (res.data) {
           const member = res.data;

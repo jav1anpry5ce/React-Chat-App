@@ -8,7 +8,7 @@ const shortid = require("shortid");
 
 const ChatContext = createContext();
 
-const socket = io(`http://localhost:5000`, {
+const socket = io(`https://api.chatapp.home`, {
   transports: ["websocket"],
 });
 
@@ -46,7 +46,7 @@ const ChatProvider = ({ children }) => {
   const screenTrackRef = useRef();
 
   const getUpdateUser = async (user) => {
-    const uUser = await axios.get(`http://localhost:5000/api/user`, {
+    const uUser = await axios.get(`https://api.chatapp.home/api/user`, {
       headers: {
         Authorization: `${user.token}`,
       },
