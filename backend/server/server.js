@@ -56,7 +56,7 @@ Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
     auth: {
       type: "basic",
       username: "admin",
-      password: "$2y$10$qMMN8mNpyxQvi6utVAnCYOZnqBiSqcmDQ1vFPMhcgBZLtt1Rp9Qny", // "changeit" encrypted with bcrypt
+      password: "$2a$12$yFtj.4H4iyHym9hFkT1CFerilgz2Gyp9WgAMWz6h0mqo1UZS0XNt.", // "changeit" encrypted with bcrypt
     },
   });
 

@@ -4,9 +4,9 @@ const sql = require("../sql");
 
 module.exports = async function (emitter, data, pubClient) {
   try {
-    let user = await sql.verifyToken(data.token);
-    if (!user) return emitter.emit("error", { message: "Invalid token" });
-    user = await sql.getUser(data.username);
+    const token = await sql.verifyToken(data.token);
+    if (!token) return emitter.emit("error", { message: "Invalid token" });
+    const user = await sql.getUser(data.username);
     const joinedUser = {
       id: data.id,
       name: user.name,
@@ -14,12 +14,21 @@ module.exports = async function (emitter, data, pubClient) {
       username: user.username,
     };
     const users = await getUsers(pubClient);
-    const u = users.find((u) => u.id === data.id);
-    if (!u) {
+    const onlineUser = users.find((user) => user.username === data.username);
+    if (onlineUser) {
+      onlineUser.id = data.id;
+      emitter.emit("userData", user);
+    } else {
       users.push(joinedUser);
+      emitter.emit("userData", joinedUser);
     }
-    emitter.emit("userData", joinedUser);
-    setUsers(users, pubClient);
+    await setUsers(users, pubClient);
+
+    // if (!user) {
+    //   users.push(joinedUser);
+    // }
+    // emitter.emit("userData", joinedUser);
+    // setUsers(users, pubClient);
   } catch (err) {
     console.log(err);
   }

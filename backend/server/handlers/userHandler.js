@@ -87,12 +87,10 @@ module.exports = function (socket, emitter, pubClient) {
 
   socket.on("disconnect", async () => {
     try {
+      console.log("User disconnected");
       const users = await getUsers(pubClient);
-      const index = users.findIndex((user) => user.id === socket.id);
-      if (index !== -1) {
-        users.splice(index, 1);
-        setUsers(users, pubClient);
-      }
+      const list = users.filter((user) => user.id !== socket.id);
+      await setUsers(list, pubClient);
     } catch (err) {
       console.log(err);
     }
