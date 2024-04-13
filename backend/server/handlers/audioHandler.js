@@ -1,5 +1,6 @@
 const sql = require("../sql");
 const getUsers = require("../getUsers");
+const fs = require("fs");
 
 module.exports = function (data, emitter, pubClient) {
   try {
@@ -34,7 +35,7 @@ module.exports = function (data, emitter, pubClient) {
         const toUsers = JSON.parse(conversation.users);
         const users = await getUsers(pubClient);
         users.forEach((user) => {
-          if (toUsers.includes(user.id)) {
+          if (toUsers.includes(user.username)) {
             emitter.to(user.id).emit("newMessage", message);
           }
         });

@@ -8,7 +8,7 @@ const shortid = require("shortid");
 
 const ChatContext = createContext();
 
-const socket = io(`${process.env.REACT_APP_API_URI}`, {
+const socket = io(`http://localhost:5000`, {
   transports: ["websocket"],
 });
 
@@ -46,7 +46,7 @@ const ChatProvider = ({ children }) => {
   const screenTrackRef = useRef();
 
   const getUpdateUser = async (user) => {
-    const uUser = await axios.get(`${process.env.REACT_APP_API_URI}/api/user`, {
+    const uUser = await axios.get(`http://localhost:5000/api/user`, {
       headers: {
         Authorization: `${user.token}`,
       },
@@ -155,50 +155,94 @@ const ChatProvider = ({ children }) => {
   useEffect(() => {
     const swap = (data) => {
       return new Promise(async (resolve, reject) => {
-        const initialChats = JSON.parse(localStorage.getItem("chats"));
-        if (!initialChats) return resolve([]);
-        initialChats.forEach((item, i) => {
-          if (item.id === data.conversationId) {
-            initialChats.splice(i, 1);
-            initialChats.unshift(item);
-          }
-        });
-        localStorage.setItem("chats", JSON.stringify(initialChats));
-        const chats = await setUnread(data);
-        resolve(chats);
+        try {
+          let initialChats = JSON.parse(localStorage.getItem("chats")) || [];
+
+          // If there are no initial chats, resolve with an empty array
+          if (!initialChats) return resolve([]);
+
+          // Find the conversation in the chats array
+          const conversationIndex = initialChats.findIndex(
+            (item) => item.id === data.conversationId
+          );
+
+          // If the conversation doesn't exist in the chats array, resolve with the initial chats
+          if (conversationIndex === -1) return resolve(initialChats);
+
+          // Remove the conversation from its current position and add it to the beginning of the array
+          const conversation = initialChats.splice(conversationIndex, 1)[0];
+          initialChats.unshift(conversation);
+
+          // Update the local storage with the modified chats array
+          localStorage.setItem("chats", JSON.stringify(initialChats));
+
+          // Update unread counts and resolve with the updated chats
+          const chats = await setUnread(data);
+          resolve(chats);
+        } catch (error) {
+          console.error("Error swapping chats:", error);
+          resolve([]);
+        }
       });
     };
+
     const setUnread = (data) => {
       return new Promise((resolve, reject) => {
-        const user = JSON.parse(localStorage.getItem("user"));
-        const chats = JSON.parse(localStorage.getItem("chats"));
-        if (!chats) return resolve([]);
-        const chat = chats.find((chat) => chat.id === data.conversationId);
-        if (!chat) return resolve([]);
-        if (data.sender.username === user.username) return resolve(chats);
-        if (chatting?.id === chat?.id) return resolve(chats);
-        else if (chat?.unread) chat.unread += 1;
-        else chat.unread = 1;
-        localStorage.setItem("chats", JSON.stringify(chats));
-        resolve(chats);
+        try {
+          const user = JSON.parse(localStorage.getItem("user"));
+          const chats = JSON.parse(localStorage.getItem("chats")) || [];
+
+          if (!user || !chats) return resolve(chats);
+
+          const chat = chats.find((chat) => chat.id === data.conversationId);
+          if (!chat) return resolve(chats);
+
+          if (
+            data.sender.username === user.username ||
+            chatting?.id === chat.id
+          ) {
+            // If the current user sent the message or they are chatting in the same conversation, do not increment unread count
+            return resolve(chats);
+          }
+
+          if (chat.unread) {
+            chat.unread += 1;
+          } else {
+            chat.unread = 1;
+          }
+
+          localStorage.setItem("chats", JSON.stringify(chats));
+          resolve(chats);
+        } catch (error) {
+          console.error("Error setting unread count:", error);
+          resolve([]);
+        }
       });
     };
+
     socket.on("newMessage", async (data) => {
-      console.log(data);
-      const chats = await swap(data);
-      const chat = chats.find((chat) => chat.id === data.conversationId);
-      if (chat) {
-        chat.messages.push(data);
-        chat.lastMessage = data.message;
-        localStorage.setItem("chats", JSON.stringify(chats));
-        setChats(chats);
-      } else {
-        socket.emit("getChatInfo", {
-          chatId: data.conversationId,
-          username: user?.username,
-        });
+      try {
+        console.log(data);
+        let chats = await swap(data);
+
+        const chat = chats.find((chat) => chat.id === data.conversationId);
+        if (chat) {
+          chat.messages.push(data);
+          chat.lastMessage = data.message;
+          localStorage.setItem("chats", JSON.stringify(chats));
+          setChats(chats);
+        } else {
+          // If the chat doesn't exist locally, request chat info from the server
+          socket.emit("getChatInfo", {
+            chatId: data.conversationId,
+            username: user?.username,
+          });
+        }
+
+        notifyUser(data);
+      } catch (error) {
+        console.error("Error handling new message:", error);
       }
-      notifyUser(data);
     });
 
     socket.on("chatInfo", (chat) => {
@@ -208,15 +252,23 @@ const ChatProvider = ({ children }) => {
     });
 
     socket.on("messageDeleted", ({ messageID, conversationID }) => {
-      const chats = JSON.parse(localStorage.getItem("chats"));
-      const chat = chats.find((chat) => chat.id === conversationID);
-      if (!chat) return;
-      const message = chat.messages.find((msg) => msg.id === messageID);
-      if (!message) return;
-      message.message.wasUnsent = true;
-      message.message.text = null;
-      localStorage.setItem("chats", JSON.stringify(chats));
-      setChats(chats);
+      try {
+        let chats = JSON.parse(localStorage.getItem("chats")) || [];
+
+        const chat = chats.find((chat) => chat.id === conversationID);
+        if (!chat) return;
+
+        const message = chat.messages.find((msg) => msg.id === messageID);
+        if (!message) return;
+
+        message.message.wasUnsent = true;
+        message.message.text = null;
+
+        localStorage.setItem("chats", JSON.stringify(chats));
+        setChats(chats);
+      } catch (error) {
+        console.error("Error handling message deletion:", error);
+      }
     });
 
     socket.on("error", ({ message }) => {
@@ -241,42 +293,57 @@ const ChatProvider = ({ children }) => {
     });
 
     socket.on("chats", (data) => {
-      const chats = JSON.parse(localStorage.getItem("chats"));
-      if (chats && chats.length === 0) {
-        localStorage.setItem("chats", JSON.stringify(data));
-        setChats(data);
-        return;
-      } else {
+      try {
+        let chats = JSON.parse(localStorage.getItem("chats")) || [];
+
+        if (chats.length === 0) {
+          localStorage.setItem("chats", JSON.stringify(data));
+          setChats(data);
+          return;
+        }
+
         data.forEach((chat) => {
-          const c = chats?.find((c) => c.id === chat.id);
-          if (c) {
-            c.unread += chat.messages.length - c.messages.length;
-            c.messages = chat.messages;
-            c.name = chat.name;
-            c.image = chat.image;
-            c.chatType = chat.chatType;
-            if (c?.members) c.members = chat.members;
+          const existingChatIndex = chats.findIndex((c) => c.id === chat.id);
+          if (existingChatIndex !== -1) {
+            const existingChat = chats[existingChatIndex];
+            existingChat.unread +=
+              chat.messages.length - existingChat.messages.length;
+            Object.assign(existingChat, chat);
           } else {
             chats.push(chat);
           }
         });
+
         localStorage.setItem("chats", JSON.stringify(chats));
         setChats(chats);
+      } catch (error) {
+        console.error("Error handling chat data:", error);
       }
     });
 
     socket.on("groupMemberAdded", (data) => {
-      const chats = JSON.parse(localStorage.getItem("chats"));
-      const chat = chats.find((chat) => chat.id === data.id);
-      if (!chat) {
-        chats.push(data);
+      try {
+        let chats = JSON.parse(localStorage.getItem("chats")) || [];
+
+        // Find the chat corresponding to the provided conversation ID
+        const chat = chats.find((chat) => chat.id === data.id);
+
+        // If the chat does not exist, it means it's a new chat, so add it to the chats array
+        if (!chat) {
+          chats.push(data);
+        } else {
+          // Update the members of the existing chat
+          chat.members = data.members;
+        }
+
+        // Update the local storage with the modified chats array
         localStorage.setItem("chats", JSON.stringify(chats));
+
+        // Update the state with the modified chats array
         setChats(chats);
-        return;
+      } catch (error) {
+        console.error("Error handling group member addition:", error);
       }
-      chat.members = data.members;
-      localStorage.setItem("chats", JSON.stringify(chats));
-      setChats(chats);
     });
 
     socket.on("groupUpdated", (data) => {
@@ -395,70 +462,71 @@ const ChatProvider = ({ children }) => {
 
   const sendMessage = (messageData) => {
     return new Promise((resolve, reject) => {
-      if (!messageData.conversationId) return reject("Error");
-      if (messageData.audio) {
-        const id = shortid.generate();
-        const data = {
-          id: id,
-          conversationId: messageData.conversationId,
-          sender: user?.username,
-          receiver: chatting?.username,
-          message: {
-            id: id,
-            type: "audio",
-            data: messageData.audio,
-          },
-          time: Date.now(),
-        };
-        if (messageData.chatType === "group")
-          socket.emit("sendGroupMessage", data);
-        else socket.emit("chat", data);
-        return resolve("Success");
-      } else if (messageData.file) {
-        const id = shortid.generate();
-        let fileReader = new FileReader();
+      if (!messageData.conversationId) {
+        reject("Error: Conversation ID is missing");
+        return;
+      }
+
+      const id = shortid.generate();
+      const messageType = getMessageType(messageData);
+
+      if (messageType === "file") {
+        const fileReader = new FileReader();
         fileReader.readAsDataURL(messageData.file);
         fileReader.onloadend = () => {
-          let base64String = fileReader.result;
-          const data = {
-            id: id,
-            conversationId: messageData.conversationId,
-            sender: user?.username,
-            receiver: chatting?.username,
-            message: {
-              id: id,
-              type: messageData.file.type.split("/")[0],
-              name: messageData.file.name,
-              file: base64String,
-              text: messageData.text,
-            },
-            time: Date.now(),
-          };
-          if (messageData.chatType === "group")
-            socket.emit("sendGroupMessage", data);
-          else socket.emit("chat", data);
-          return resolve("Success");
+          const base64String = fileReader.result;
+          const message = constructMessage(
+            messageData,
+            id,
+            messageType,
+            base64String
+          );
+          sendMessageOverSocket(message, messageData.chatType);
+          resolve("Success");
         };
       } else {
-        const id = shortid.generate();
-        const data = {
-          id: id,
-          conversationId: messageData.conversationId,
-          sender: user?.username,
-          receiver: chatting?.username,
-          message: {
-            id: id,
-            type: "text",
-            text: messageData.text,
-          },
-          time: Date.now(),
-        };
-        if (messageData.chatType === "group")
-          socket.emit("sendGroupMessage", data);
-        else socket.emit("chat", data);
-        return resolve("Success");
+        const message = constructMessage(messageData, id, messageType);
+        sendMessageOverSocket(message, messageData.chatType);
+        resolve("Success");
       }
     });
+  };
+
+  const getMessageType = (messageData) => {
+    if (messageData.audio) {
+      return "audio";
+    } else if (messageData.file) {
+      return "file";
+    } else {
+      return "text";
+    }
+  };
+
+  const constructMessage = (messageData, id, messageType, fileData = null) => {
+    return {
+      id: id,
+      conversationId: messageData.conversationId,
+      sender: user?.username,
+      receiver: chatting?.username,
+      message: {
+        id: id,
+        type: messageType,
+        ...(messageType === "text" && { text: messageData.text }),
+        ...(messageType === "audio" && { data: messageData.audio }),
+        ...(messageType === "file" && {
+          type: messageData.file.type.split("/")[0],
+          name: messageData.file.name,
+          file: fileData,
+          text: messageData.text,
+        }),
+      },
+      time: Date.now(),
+    };
+  };
+
+  const sendMessageOverSocket = (message, chatType) => {
+    const eventName = chatType === "group" ? "sendGroupMessage" : "chat";
+    socket.emit(eventName, message);
   };
 
   const addUser = (userToAdd) => {
@@ -658,43 +726,57 @@ const ChatProvider = ({ children }) => {
   };
 
   const notifyUser = (data) => {
-    if (data?.sender?.username === user?.username) return;
-    if (data.conversationId === chatting?.id) return;
-    const noti = notifications.find((n) => n.id === data.id);
-    if (noti) return;
-    audio.currentTime = 0;
-    audio.volume = 0.045;
+    // Check if the message sender is the current user or if it's for the active conversation
+    if (
+      data?.sender?.username === user?.username ||
+      data.conversationId === chatting?.id
+    ) {
+      return;
+    }
+
+    // Check if there's already a notification with the same ID
+    if (notifications.some((n) => n.id === data.id)) {
+      return;
+    }
+
+    // Set up audio notification
+    const audioNotification = new Audio();
+    audioNotification.src = "notification-sound.mp3";
+    audioNotification.volume = 0.045;
+
+    // Display notification
+    const notification = createNotification(data);
+    setNotifications((prev) => [...prev, notification]);
+
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+    }, 5000);
+
+    // Play audio notification
+    audioNotification.play();
+  };
+
+  const createNotification = (data) => {
     const chats = JSON.parse(localStorage.getItem("chats"));
     const chat = chats.find((chat) => chat.id === data.conversationId);
+
     if (chat && chat.chatType === "group") {
-      const notification = {
+      return {
         id: data?.id,
         title: `New message from ${chat?.name}`,
         image: chat?.image,
         data,
         group: true,
       };
-      setNotifications((prev) => [...prev, notification]);
-      setTimeout(() => {
-        setNotifications((prev) =>
-          prev.filter((n) => n.id !== notification.id)
-        );
-      }, 5000);
     } else {
-      const notification = {
+      return {
         id: data?.id,
         title: `New message from ${data?.sender?.name}`,
         image: data?.sender?.image,
         data,
       };
-      setNotifications((prev) => [...prev, notification]);
-      setTimeout(() => {
-        setNotifications((prev) =>
-          prev.filter((n) => n.id !== notification.id)
-        );
-      }, 5000);
     }
-    audio.play();
   };
 
   const logout = () => {

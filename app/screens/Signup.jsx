@@ -27,7 +27,7 @@ export default function Login({ navigator }) {
     };
 
     axios
-      .post(`${process.env.REACT_APP_API_URI}/api/signup`, data, config)
+      .post(`http://localhost:5000/api/signup`, data, config)
       .then(() => {
         setLoading(false);
         navigator.navigate("Login");

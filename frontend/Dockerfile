@@ -1,6 +1,5 @@
 FROM node:alpine as builder
 
-ENV REACT_APP_API_URI ""
 
 WORKDIR /app
 
@@ -21,6 +20,8 @@ WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
 
 COPY --from=builder /app/build .
+
+ENV REACT_APP_API_URI ""
 
 ENTRYPOINT [ "nginx", "-g", "daemon off;" ]
 
