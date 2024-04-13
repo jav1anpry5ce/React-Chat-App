@@ -418,7 +418,7 @@ const calculateNextPageUrl = (id, limit = 30, offset = 0) => {
         const totalCount = countResult[0].count;
         const nextPage = offset + limit < totalCount ? offset + limit : null;
         const nextPageUrl = nextPage
-          ? `http://${process.env.IP}/api/messages?conversationId=${id}&offset=${nextPage}&limit=${limit}`
+          ? `${process.env.IP}/api/messages?conversationId=${id}&offset=${nextPage}&limit=${limit}`
           : null;
         resolve(nextPageUrl);
       }

@@ -98,7 +98,7 @@ function fileHandler(message, emitter, pubClient) {
         }
         const messageData = {
           ...message.message,
-          file: `https://${process.env.IP}/${fileName}`,
+          file: `${process.env.IP}/${fileName}`,
         };
 
         const message = {
@@ -142,7 +142,7 @@ function audioHandler(message, emitter, pubClient) {
         }
         const messageData = {
           ...message.message,
-          file: `https://${process.env.IP}/${fileName}`,
+          file: `${process.env.IP}/${fileName}`,
         };
 
         const message = {

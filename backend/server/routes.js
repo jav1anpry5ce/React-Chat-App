@@ -129,7 +129,7 @@ router.post("/upload", async (req, res) => {
     .validateToken(token)
     .then(() => {
       const filename = shortid.generate() + ".jpg";
-      const image_url = `http://${IP}/${filename}`;
+      const image_url = `${IP}/${filename}`;
       image.mv("./files/" + filename, (err) => {
         if (err) return res.status(500).send({ message: err.message });
         sql

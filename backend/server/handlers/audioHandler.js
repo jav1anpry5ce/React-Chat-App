@@ -17,7 +17,7 @@ module.exports = function (data, emitter, pubClient) {
         }
         const messageData = {
           ...data.message,
-          data: `https://${process.env.IP}/${fileName}`,
+          data: `${process.env.IP}/${fileName}`,
         };
 
         const message = {
