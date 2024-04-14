@@ -1,4 +1,5 @@
 const getUsers = require("../getUsers");
+const logger = require("../config/logger.config");
 
 module.exports = function (socket, emitter, pubClient) {
   socket.on("callUser", async (data) => {
@@ -15,7 +16,7 @@ module.exports = function (socket, emitter, pubClient) {
         });
       });
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   });
 
@@ -27,7 +28,7 @@ module.exports = function (socket, emitter, pubClient) {
         emitter.to(user.id).emit("callAccepted", data.signal);
       });
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   });
 
@@ -39,7 +40,7 @@ module.exports = function (socket, emitter, pubClient) {
         emitter.to(user.id).emit("endCall");
       });
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   });
 
@@ -51,7 +52,7 @@ module.exports = function (socket, emitter, pubClient) {
         emitter.to(user.id).emit("ignoreCall");
       });
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   });
 
@@ -63,7 +64,7 @@ module.exports = function (socket, emitter, pubClient) {
         emitter.to(user.id).emit("busy");
       });
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   });
 };

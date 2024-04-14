@@ -1,6 +1,7 @@
 const getUsers = require("../getUsers");
 const setUsers = require("../setUsers");
 const sql = require("../sql");
+const logger = require("../config/logger.config");
 
 module.exports = async function (emitter, data, pubClient) {
   try {
@@ -30,6 +31,6 @@ module.exports = async function (emitter, data, pubClient) {
     // emitter.emit("userData", joinedUser);
     // setUsers(users, pubClient);
   } catch (err) {
-    console.log(err);
+    logger.log(err);
   }
 };

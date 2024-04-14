@@ -1,4 +1,5 @@
 const sql = require("../sql");
+const logger = require("../config/logger.config");
 
 module.exports = function (socket, emitter) {
   socket.on("getChats", async (username) => {
@@ -8,7 +9,7 @@ module.exports = function (socket, emitter) {
       const chats = [...groupChats, ...privateChats];
       emitter.to(socket.id).emit("chats", chats);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       emitter.to(socket.id).emit("error", {
         message: "Something went wrong. Try again later.",
       });
@@ -21,7 +22,7 @@ module.exports = function (socket, emitter) {
         emitter.to(socket.id).emit("chatInfo", chat);
       });
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       emitter.to(socket.id).emit("error", {
         message: "Something went wrong. Try again later.",
       });

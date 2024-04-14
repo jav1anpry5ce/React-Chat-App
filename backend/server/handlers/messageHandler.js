@@ -3,6 +3,7 @@ const audioHandler = require("./audioHandler");
 const textHandler = require("./textHandler");
 const sql = require("../sql");
 const getUsers = require("../getUsers");
+const logger = require("../config/logger.config");
 
 module.exports = function (socket, emitter, pubClient) {
   const id = socket.id;
@@ -22,7 +23,7 @@ module.exports = function (socket, emitter, pubClient) {
         textHandler(message, emitter, pubClient);
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   });
 
@@ -40,7 +41,7 @@ module.exports = function (socket, emitter, pubClient) {
           });
         });
       } catch (err) {
-        console.error(err);
+        logger.error(err);
         const user = users.filter((user) => user.username === username);
         user.forEach((user) => {
           emitter.to(user.id).emit("error", { message: err });

@@ -3,6 +3,7 @@ const sql = require("../sql");
 const shortid = require("shortid");
 const getUsers = require("../getUsers");
 const setUsers = require("../setUsers");
+const logger = require("../config/logger.config");
 
 module.exports = function (socket, emitter, pubClient) {
   socket.on("userData", async (userData) => {
@@ -14,7 +15,7 @@ module.exports = function (socket, emitter, pubClient) {
       };
       userConnectHandler(emitter, data, pubClient);
     } catch (err) {
-      console.log(err);
+      logger.error(err);
     }
   });
 
@@ -28,7 +29,7 @@ module.exports = function (socket, emitter, pubClient) {
         emitter.to(socket.id).emit("online", { username, online: false });
       }
     } catch (err) {
-      console.log(err);
+      logger.error(err);
     }
   });
 
@@ -80,19 +81,19 @@ module.exports = function (socket, emitter, pubClient) {
         });
       }
     } catch (err) {
-      console.log(err);
+      logger.error(err);
       emitter.to(socket.id).emit("notFound");
     }
   });
 
   socket.on("disconnect", async () => {
     try {
-      console.log("User disconnected");
+      logger.info("User disconnected");
       const users = await getUsers(pubClient);
       const list = users.filter((user) => user.id !== socket.id);
       await setUsers(list, pubClient);
     } catch (err) {
-      console.log(err);
+      logger.error(err);
     }
   });
 };

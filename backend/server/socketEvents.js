@@ -3,10 +3,11 @@ const messageHandler = require("./handlers/messageHandler");
 const callHandler = require("./handlers/callHandler");
 const groupHandler = require("./handlers/groupHandler");
 const chatHandler = require("./handlers/chatHandler");
+const logger = require("./config/logger.config");
 
 module.exports = function (io, pubClient, emitter) {
   io.on("connection", function (socket) {
-    console.log(
+    logger.info(
       `connection established from ${socket.request.socket._peername.address}:${socket.request.socket._peername.port}`
     );
 
@@ -18,6 +19,6 @@ module.exports = function (io, pubClient, emitter) {
   });
 
   io.on("error", (err) => {
-    console.error(err);
+    logger.error(err);
   });
 };

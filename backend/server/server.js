@@ -11,6 +11,7 @@ const { Server } = require("socket.io");
 const { instrument } = require("@socket.io/admin-ui");
 const { createAdapter } = require("@socket.io/redis-adapter");
 const { Emitter } = require("@socket.io/redis-emitter");
+const logger = require("./config/logger.config");
 
 require("dotenv").config();
 
@@ -61,7 +62,7 @@ Promise.all([pubClient.connect(), subClient.connect()]).then(() => {
   });
 
   server.listen(process.env.PORT || 5000, () => {
-    console.log(
+    logger.info(
       `Server has started on ${process.env.IP} using port ${process.env.PORT}`
     );
   });

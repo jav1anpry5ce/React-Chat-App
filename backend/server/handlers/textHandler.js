@@ -1,5 +1,6 @@
 const sql = require("../sql");
 const getUsers = require("../getUsers");
+const logger = require("../config/logger.config");
 
 module.exports = async function (data, emitter, pubClient) {
   try {
@@ -21,6 +22,6 @@ module.exports = async function (data, emitter, pubClient) {
       }
     });
   } catch (err) {
-    console.error(err);
+    logger.error(err);
   }
 };

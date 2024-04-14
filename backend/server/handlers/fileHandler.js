@@ -1,6 +1,7 @@
 const sql = require("../sql");
 const fs = require("fs");
 const getUsers = require("../getUsers");
+const logger = require("../config/logger.config");
 
 module.exports = function (data, emitter, pubClient) {
   try {
@@ -13,7 +14,7 @@ module.exports = function (data, emitter, pubClient) {
       { encoding: "base64" },
       async function (err) {
         if (err) {
-          console.error(err);
+          logger.error(err);
           return;
         }
         const messageData = {
@@ -41,6 +42,6 @@ module.exports = function (data, emitter, pubClient) {
       }
     );
   } catch (err) {
-    console.error(err);
+    logger.error(err);
   }
 };

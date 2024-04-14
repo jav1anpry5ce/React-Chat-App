@@ -2,6 +2,7 @@ const sql = require("../sql");
 const fs = require("fs");
 const getUsers = require("../getUsers");
 const shortid = require("shortid");
+const logger = require("../config/logger.config");
 
 module.exports = function (socket, emitter, pubClient) {
   socket.on("sendGroupMessage", function (messageData) {
@@ -14,7 +15,7 @@ module.exports = function (socket, emitter, pubClient) {
         textHandler(messageData, emitter, pubClient);
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   });
 
@@ -28,16 +29,18 @@ module.exports = function (socket, emitter, pubClient) {
         messages: [],
         chatTyoe: "group",
       };
-      await sql.createGroup(group);
+      await sql.createGroupChat(group);
       const members = groupData.members;
       const users = await getUsers(pubClient);
       users.forEach((user) => {
-        if (members.includes(user.username)) {
-          emitter.to(user.id).emit("newGroup", group);
-        }
+        members.forEach((member) => {
+          if (member.username === user.username) {
+            emitter.to(user.id).emit("newGroup", group);
+          }
+        });
       });
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       emitter.to(socket.id).emit("error", {
         message: "Something went wrong. Try again later.",
       });
@@ -50,12 +53,14 @@ module.exports = function (socket, emitter, pubClient) {
       const members = group.members;
       const users = await getUsers(pubClient);
       users.forEach((user) => {
-        if (members.includes(user.username)) {
-          emitter.to(user.id).emit("groupUpdated", group);
-        }
+        members.forEach((member) => {
+          if (member.username === user.username) {
+            emitter.to(user.id).emit("groupUpdated", group);
+          }
+        });
       });
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       emitter.to(socket.id).emit("error", {
         message: "Something went wrong. Try again later.",
       });
@@ -69,12 +74,14 @@ module.exports = function (socket, emitter, pubClient) {
       const members = group.members;
       const users = await getUsers(pubClient);
       users.forEach((user) => {
-        if (members.includes(user.username)) {
-          emitter.to(user.id).emit("groupMemberAdded", group);
-        }
+        members.forEach((member) => {
+          if (member.username === user.username) {
+            emitter.to(user.id).emit("groupMemberAdded", group);
+          }
+        });
       });
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       emitter.to(socket.id).emit("error", {
         message: "Something went wrong. Try again later.",
       });
@@ -122,7 +129,7 @@ function fileHandler(message, emitter, pubClient) {
       }
     );
   } catch (err) {
-    console.error(err);
+    logger.error(err);
   }
 }
 
@@ -137,7 +144,7 @@ function audioHandler(message, emitter, pubClient) {
       { encoding: "base64" },
       async function (err) {
         if (err) {
-          console.error(err);
+          logger.error(err);
           return;
         }
         const messageData = {
@@ -166,7 +173,7 @@ function audioHandler(message, emitter, pubClient) {
       }
     );
   } catch (err) {
-    console.error(err);
+    logger.error(err);
   }
 }
 
@@ -191,6 +198,6 @@ async function textHandler(messageData, emitter, pubClient) {
       });
     });
   } catch (err) {
-    console.error(err);
+    logger.error(err);
   }
 }
