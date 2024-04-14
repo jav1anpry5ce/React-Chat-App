@@ -31,6 +31,7 @@ module.exports = async function (emitter, data, pubClient) {
     // emitter.emit("userData", joinedUser);
     // setUsers(users, pubClient);
   } catch (err) {
-    logger.log(err);
+    emitter.emit("error", { message: "Invalid token" });
+    logger.error(err);
   }
 };

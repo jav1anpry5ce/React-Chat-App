@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const router = express.Router();
 const shortid = require("shortid");
 const IP = process.env.IP;
+const logger = require("./config/logger.config");
 
 router.post("/signup", (req, res) => {
   const saltRounds = 10;
@@ -16,7 +17,7 @@ router.post("/signup", (req, res) => {
         res.status(201).send({ message: "User created" });
       })
       .catch((err) => {
-        console.error(err);
+        logger.error(err);
         res.status(500).send({ username: "username is not available" });
       });
   });
@@ -42,6 +43,7 @@ router.post("/login", (req, res) => {
               });
             })
             .catch((err) => {
+              logger.error(err);
               res.status(500).send({ message: err.message });
             });
         } else {
@@ -50,6 +52,7 @@ router.post("/login", (req, res) => {
       });
     })
     .catch((err) => {
+      logger.error(err);
       res.status(401).send({ message: "check username/password" });
     });
 });
@@ -66,6 +69,7 @@ router.get("/users/:username", (req, res) => {
       });
     })
     .catch((err) => {
+      logger.error(err);
       res.status(404).send({ message: "user not found" });
     });
 });
@@ -87,12 +91,12 @@ router.get("/user", (req, res) => {
           });
         })
         .catch((err) => {
-          console.error(err);
+          logger.error(err);
           res.status(500).send({ message: "unauthorized" });
         });
     })
     .catch((err) => {
-      console.error(err);
+      logger.error(err);
       res.status(500).send({ message: "unauthorized" });
     });
 });
@@ -113,7 +117,8 @@ router.post("/user/update", async (req, res) => {
           res.status(500).send({ message: "Something went wrong!" });
         });
     })
-    .catch(() => {
+    .catch((err) => {
+      logger.error(err);
       res.status(500).send({ message: "Something went wrong!" });
     });
 });
@@ -143,6 +148,7 @@ router.post("/upload", async (req, res) => {
       });
     })
     .catch((err) => {
+      logger.error(err);
       res.status(500).send({ message: "unauthorized" });
     });
 });
