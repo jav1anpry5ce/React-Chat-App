@@ -44,16 +44,16 @@ module.exports = function (socket, emitter, pubClient) {
     });
   });
 
-  socket.on("addingUser", async ({ userToAdd, user }) => {
+  socket.on("addingUser", async ({ userToAdd, user: username }) => {
     try {
       const conversation = await sql.getConversation({
-        users: [userToAdd, user],
+        users: [userToAdd, username],
       });
       if (conversation) {
         emitter
           .to(socket.id)
           .emit("error", { message: "Conversation already exists" });
-      } else if (userToAdd === user) {
+      } else if (userToAdd === username) {
         emitter.to(socket.id).emit("error", {
           message: "You can't add yourself to a conversation",
         });
@@ -61,7 +61,7 @@ module.exports = function (socket, emitter, pubClient) {
         const user = await sql.getUser(userToAdd);
         const conversation = {
           id: shortid.generate(),
-          users: [userToAdd, user],
+          users: [userToAdd, username],
         };
         await sql.createConversation(conversation);
         const chat = {
