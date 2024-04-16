@@ -31,13 +31,32 @@ export const UserProvider = ({ children }) => {
     setUser(updatedUser);
   };
 
+  const handleUserData = (data) => {
+    if (!user) return;
+
+    if (
+      user.name === data.name &&
+      user.image === data.image &&
+      user?.id === data?.id
+    ) {
+      return;
+    }
+
+    const updatedUser = {
+      ...user,
+      id: data.id
+    };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  };
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     getUpdateUser(user);
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, setUser, updateUser }}>
+    <UserContext.Provider value={{ user, setUser, updateUser, handleUserData }}>
       {children}
     </UserContext.Provider>
   );

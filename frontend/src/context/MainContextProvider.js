@@ -13,7 +13,7 @@ const socket = io(`https://api.chatapp.home`, {
 });
 
 export const MainProvider = ({ children }) => {
-  const { user, setUser } = useUserContext();
+  const { user, setUser, handleUserData } = useUserContext();
   const {
     chats,
     setChats,
@@ -43,6 +43,109 @@ export const MainProvider = ({ children }) => {
   const [audio] = useState(new Audio(noti));
   const [notifications, setNotifications] = useState([]);
   const [clear, setClear] = useState(false);
+
+  const removeUser = (chatId) => {
+    if (chatting && chatting.id === chatId) setChatting(null);
+    const chats = JSON.parse(localStorage.getItem("chats"));
+    const newChats = chats.filter((chat) => chat.id !== chatId);
+    localStorage.setItem("chats", JSON.stringify(newChats));
+    setChats(newChats);
+  };
+
+  const deleteMessage = (messageID, conversationID) => {
+    socket.emit("deleteMessage", {
+      messageID,
+      conversationID,
+      username: user?.username
+    });
+  };
+
+  const createGroup = (groupData) => {
+    const admin = {
+      username: user?.username,
+      name: user?.name,
+      image: user?.image,
+      admin: 1
+    };
+    groupData.members.push(admin);
+    socket.emit("createGroup", groupData);
+  };
+
+  const addGroupMember = (data) => {
+    socket.emit("addGroupMember", data);
+  };
+
+  const changeGroup = (data) => {
+    socket.emit("changeGroup", data);
+  };
+
+  const notifyUser = (data) => {
+    // Check if the message sender is the current user or if it's for the active conversation
+    if (
+      data?.sender?.username === user?.username ||
+      data.conversationId === chatting?.id
+    ) {
+      return;
+    }
+
+    // Check if there's already a notification with the same ID
+    if (notifications.some((n) => n.id === data.id)) {
+      return;
+    }
+
+    // Set up audio notification
+    const audioNotification = new Audio();
+    audioNotification.src = "notification-sound.mp3";
+    audioNotification.volume = 0.045;
+
+    // Display notification
+    const notification = createNotification(data);
+    setNotifications((prev) => [...prev, notification]);
+
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+    }, 5000);
+
+    // Play audio notification
+    audioNotification.play();
+  };
+
+  const createNotification = (data) => {
+    const chats = JSON.parse(localStorage.getItem("chats"));
+    const chat = chats.find((chat) => chat.id === data.conversationId);
+
+    if (chat && chat.chatType === "group") {
+      return {
+        id: data?.id,
+        title: `New message from ${chat?.name}`,
+        image: chat?.image,
+        data,
+        group: true
+      };
+    } else {
+      return {
+        id: data?.id,
+        title: `New message from ${data?.sender?.name}`,
+        image: data?.sender?.image,
+        data
+      };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem("user");
+    localStorage.setItem("chats", JSON.stringify([]));
+    setChats([]);
+    setUser(null);
+  };
+
+  const addUser = (userToAdd) => {
+    return new Promise((resolve) => {
+      socket.emit("addingUser", { userToAdd, user: user?.username });
+      return resolve("success");
+    });
+  };
 
   useEffect(() => {
     socket.on("callUser", (data) => {
@@ -83,18 +186,6 @@ export const MainProvider = ({ children }) => {
             username: user?.username
           });
         }
-        // if (chat) {
-        //   chat.messages.push(data);
-        //   chat.lastMessage = data.message;
-        //   localStorage.setItem('chats', JSON.stringify(chats));
-        //   setChats(chats);
-        // } else {
-        //   // If the chat doesn't exist locally, request chat info from the server
-        //   socket.emit('getChatInfo', {
-        //     chatId: data.conversationId,
-        //     username: user?.username
-        //   });
-        // }
 
         notifyUser(data);
       } catch (error) {
@@ -192,25 +283,6 @@ export const MainProvider = ({ children }) => {
       setChatting(null);
     };
 
-    const handleUserData = (data) => {
-      if (!user) return;
-
-      if (
-        user.name === data.name &&
-        user.image === data.image &&
-        user?.id === data?.id
-      ) {
-        return;
-      }
-
-      const updatedUser = {
-        ...user,
-        id: data.id
-      };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
-    };
-
     if (user) {
       socket.emit("userData", user);
       socket.on("connect", () => {
@@ -272,108 +344,7 @@ export const MainProvider = ({ children }) => {
     };
   }, [chatting]);
 
-  const addUser = (userToAdd) => {
-    return new Promise((resolve) => {
-      socket.emit("addingUser", { userToAdd, user: user?.username });
-      return resolve("success");
-    });
-  };
-
-  const removeUser = (chatId) => {
-    if (chatting && chatting.id === chatId) setChatting(null);
-    const chats = JSON.parse(localStorage.getItem("chats"));
-    const newChats = chats.filter((chat) => chat.id !== chatId);
-    localStorage.setItem("chats", JSON.stringify(newChats));
-    setChats(newChats);
-  };
-
-  const deleteMessage = (messageID, conversationID) => {
-    socket.emit("deleteMessage", {
-      messageID,
-      conversationID,
-      username: user?.username
-    });
-  };
-
-  const createGroup = (groupData) => {
-    const admin = {
-      username: user?.username,
-      name: user?.name,
-      image: user?.image,
-      admin: 1
-    };
-    groupData.members.push(admin);
-    socket.emit("createGroup", groupData);
-  };
-
-  const addGroupMember = (data) => {
-    socket.emit("addGroupMember", data);
-  };
-
-  const changeGroup = (data) => {
-    socket.emit("changeGroup", data);
-  };
-
-  const notifyUser = (data) => {
-    // Check if the message sender is the current user or if it's for the active conversation
-    if (
-      data?.sender?.username === user?.username ||
-      data.conversationId === chatting?.id
-    ) {
-      return;
-    }
-
-    // Check if there's already a notification with the same ID
-    if (notifications.some((n) => n.id === data.id)) {
-      return;
-    }
-
-    // Set up audio notification
-    const audioNotification = new Audio();
-    audioNotification.src = "notification-sound.mp3";
-    audioNotification.volume = 0.045;
-
-    // Display notification
-    const notification = createNotification(data);
-    setNotifications((prev) => [...prev, notification]);
-
-    // Remove notification after 5 seconds
-    setTimeout(() => {
-      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
-    }, 5000);
-
-    // Play audio notification
-    audioNotification.play();
-  };
-
-  const createNotification = (data) => {
-    const chats = JSON.parse(localStorage.getItem("chats"));
-    const chat = chats.find((chat) => chat.id === data.conversationId);
-
-    if (chat && chat.chatType === "group") {
-      return {
-        id: data?.id,
-        title: `New message from ${chat?.name}`,
-        image: chat?.image,
-        data,
-        group: true
-      };
-    } else {
-      return {
-        id: data?.id,
-        title: `New message from ${data?.sender?.name}`,
-        image: data?.sender?.image,
-        data
-      };
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("user");
-    localStorage.setItem("chats", JSON.stringify([]));
-    setChats([]);
-    setUser(null);
-  };
+  
 
   useEffect(() => {
     const interval = setInterval(() => {
