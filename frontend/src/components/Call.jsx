@@ -59,11 +59,17 @@ export default function Call() {
     if (!receivingCall) audio.pause();
   }, [receivingCall, calling, audio, callAccepted]);
 
+  useEffect(() => {
+    if (callAccepted) {
+      setShow(!hide);
+    }
+  }, [hide, callAccepted]);
+
   return (
     <Transition.Root show={show} as={Fragment}>
       <Dialog
         as="div"
-        className={`fixed inset-0 overflow-y-auto ${hide && "-z-20"} px-2`}
+        className={`fixed inset-0 overflow-y-auto ${hide && "hidden"} px-2`}
         onClose={() => {}}
       >
         <div className="flex min-h-screen items-center justify-center text-center sm:block sm:p-0">
