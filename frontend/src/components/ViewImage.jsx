@@ -1,10 +1,10 @@
-import React, { Fragment, useContext } from "react";
+import React, { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { ChatContext } from "../utils/ChatContext";
+import { useMainContext } from "../context/MainContextProvider";
 import { AiOutlineClose } from "react-icons/ai";
 
 export default function ViewImage() {
-  const { viewing, setViewing, viewSrc } = useContext(ChatContext);
+  const { viewing, setViewing, viewSrc } = useMainContext();
   return (
     <Transition.Root show={viewing} as={Fragment}>
       <Dialog
@@ -54,7 +54,7 @@ export default function ViewImage() {
               />
             </div>
           </Transition.Child>
-          <div className="fixed top-2 right-5 bg-white transition duration-150 hover:bg-red-500 hover:text-white">
+          <div className="fixed right-5 top-2 bg-white transition duration-150 hover:bg-red-500 hover:text-white">
             <AiOutlineClose
               className="h-7 w-7 cursor-pointer"
               onClick={() => {

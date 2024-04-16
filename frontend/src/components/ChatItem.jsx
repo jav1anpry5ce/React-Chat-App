@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useContext } from "react";
-import { ChatContext } from "../utils/ChatContext";
+import React, { useState, useEffect } from "react";
+import { useMainContext } from "../context/MainContextProvider";
 import { AiOutlineClose } from "react-icons/ai";
 import { MdInsertPhoto } from "react-icons/md";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useChatContext } from "../context/ChatContextProvider";
 
 export default function ChatItem({ chat }) {
-  const { setChatting, setShow, chatting, setZero, removeUser } =
-    useContext(ChatContext);
+  const { setShow, removeUser } = useMainContext();
+  const { setChatting, chatting, setUnreadToZero } = useChatContext();
   const [lastChat, setLastChat] = useState("");
   const navigate = useNavigate();
 
@@ -29,13 +30,13 @@ export default function ChatItem({ chat }) {
     } else if (lastChat?.message?.type === "video") {
       setLastChat("video");
     }
-  }, [chat]);
+  }, [chat.lastMessage, chat.messages]);
 
   useEffect(() => {
     if (chatting) {
       if (chatting?.id === chat?.id) {
         chat.unread = 0;
-        setZero(chat?.id);
+        setUnreadToZero(chat?.id);
       }
     }
     // eslint-disable-next-line

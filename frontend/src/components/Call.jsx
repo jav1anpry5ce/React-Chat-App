@@ -1,5 +1,5 @@
-import React, { Fragment, useContext, useState, useEffect } from "react";
-import { ChatContext } from "../utils/ChatContext";
+import React, { Fragment, useState, useEffect } from "react";
+import { useMainContext } from "../context/MainContextProvider";
 import { Dialog, Transition } from "@headlessui/react";
 import { ImPhoneHangUp } from "react-icons/im";
 import ring from "../assets/ring.mp3";
@@ -8,15 +8,17 @@ import {
   BsCameraVideoOffFill,
   BsFillMicMuteFill,
   BsFillTelephoneFill,
-  BsMicFill,
+  BsMicFill
 } from "react-icons/bs";
 import { MdScreenShare } from "react-icons/md";
 import { AiOutlineClose } from "react-icons/ai";
 import { motion } from "framer-motion";
+import { useCallContext } from "../context/CallContextProvider";
 
 const format = require("format-duration");
 
 export default function Call() {
+  const { socket } = useMainContext();
   const {
     calling,
     answerCall,
@@ -29,15 +31,15 @@ export default function Call() {
     muteUnmute,
     onPlaying,
     currentTime,
-    hide,
-    setHide,
     myVideo,
     type,
     userStream,
     updateVideo,
     myVideoStatus,
     handleScreenSharing,
-  } = useContext(ChatContext);
+    hide,
+    setHide
+  } = useCallContext();
   const [show, setShow] = useState(false);
   const [audio] = useState(new Audio(ring));
 
@@ -110,13 +112,13 @@ export default function Call() {
                   <div className="flex space-x-20">
                     <div
                       className="cursor-pointer rounded-full bg-red-500 px-2 py-2 text-white"
-                      onClick={ignoreCall}
+                      onClick={() => ignoreCall(caller?.from, socket)}
                     >
                       <ImPhoneHangUp className="h-8 w-8" />
                     </div>
                     <div
                       className="cursor-pointer rounded-full bg-green-600 px-2 py-2 text-white"
-                      onClick={answerCall}
+                      onClick={() => answerCall(socket)}
                     >
                       <BsFillTelephoneFill className="h-8 w-8" />
                     </div>
@@ -148,7 +150,7 @@ export default function Call() {
                             top: Math.round(-(window.innerHeight / 1.3)),
                             left: Math.round(-(window.innerWidth / 1.2)),
                             right: 0,
-                            bottom: 0,
+                            bottom: 0
                           }}
                           className="z-30 h-auto cursor-move md:absolute md:bottom-0 md:right-0 md:w-[15rem]"
                         >
@@ -164,7 +166,7 @@ export default function Call() {
                       <div className="absolute bottom-1 z-50 flex w-full items-center justify-center space-x-4">
                         <div
                           className="cursor-pointer rounded-full bg-red-500 px-2 py-2 text-white shadow-md hover:shadow-lg"
-                          onClick={leaveCall}
+                          onClick={() => leaveCall(socket)}
                         >
                           <ImPhoneHangUp className="h-8 w-8" />
                         </div>
@@ -218,7 +220,7 @@ export default function Call() {
                       <div className="absolute bottom-0 z-10 flex w-full items-center justify-center space-x-8 px-4 py-2">
                         <div
                           className="cursor-pointer rounded-full bg-red-500 px-2 py-2 text-white shadow-md hover:shadow-lg"
-                          onClick={leaveCall}
+                          onClick={() => leaveCall(socket)}
                         >
                           <ImPhoneHangUp className="h-8 w-8" />
                         </div>
@@ -292,7 +294,7 @@ export default function Call() {
                   <div className="flex w-full justify-between space-x-6 px-6">
                     <div
                       className="cursor-pointer rounded-full bg-red-500 px-2 py-2 text-white shadow-md hover:shadow-lg"
-                      onClick={leaveCall}
+                      onClick={() => leaveCall(socket)}
                     >
                       <ImPhoneHangUp className="h-8 w-8" />
                     </div>

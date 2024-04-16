@@ -1,15 +1,18 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { AiOutlineMenuUnfold } from "react-icons/ai";
 import { BiArrowBack } from "react-icons/bi";
 import { MdCall } from "react-icons/md";
 import { BsCameraVideoFill } from "react-icons/bs";
-import { ChatContext } from "../utils/ChatContext";
+import { useMainContext } from "../context/MainContextProvider";
 import { motion, AnimatePresence } from "framer-motion";
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from "react-router-dom";
+import { useChatContext } from "../context/ChatContextProvider";
+import { useCallContext } from "../context/CallContextProvider";
 
 export default function ChatHead() {
-  const { chatting, setShow, setChatting, callUser, socket, setGroup, chats } =
-    useContext(ChatContext);
+  const { setShow, socket, setGroup } = useMainContext();
+  const { chats, chatting, setChatting } = useChatContext();
+  const { callUser } = useCallContext();
   const navigate = useNavigate();
   const [online, setOnline] = useState(false);
   const [typing, setTyping] = useState(false);
@@ -118,11 +121,11 @@ export default function ChatHead() {
         <div className="flex items-center space-x-6 pr-4">
           <MdCall
             className="h-6 w-6 cursor-pointer hover:text-gray-300"
-            onClick={() => callUser("audio")}
+            onClick={() => callUser("audio", socket)}
           />
           <BsCameraVideoFill
             className="h-6 w-6 cursor-pointer hover:text-gray-300"
-            onClick={() => callUser("video")}
+            onClick={() => callUser("video", socket)}
           />
         </div>
       )}

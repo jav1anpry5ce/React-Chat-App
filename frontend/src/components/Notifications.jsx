@@ -1,9 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useContext } from "react";
-import { ChatContext } from "../utils/ChatContext";
+import { useMainContext } from "../context/MainContextProvider";
 
 export default function Notifications() {
-  const { notifications } = useContext(ChatContext);
+  const { notifications } = useMainContext();
 
   return (
     <div className="pointer-events-none absolute right-0 top-0 z-[60] h-screen space-y-2 overflow-x-hidden p-4">

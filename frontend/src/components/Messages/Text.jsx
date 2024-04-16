@@ -1,9 +1,8 @@
-import { useContext } from "react";
 import { MdDownloading } from "react-icons/md";
 import Linkify from "react-linkify";
-import { ChatContext } from "../../utils/ChatContext";
 import useContextMenu from "../../utils/useContextMenu";
 import ContextMenu from "../ContextMenu";
+import { useUserContext } from "../../context/UserContextProvider";
 
 function downloadFile(file, name) {
   const linkSource = file;
@@ -16,7 +15,7 @@ function downloadFile(file, name) {
 
 export default function Text({ data, username }) {
   const { clicked, setClicked, points, setPoints } = useContextMenu();
-  const { user } = useContext(ChatContext);
+  const { user } = useUserContext();
   return (
     <div
       onContextMenu={(e) => {
@@ -24,7 +23,7 @@ export default function Text({ data, username }) {
         setClicked(true);
         setPoints({
           x: e.pageX,
-          y: e.pageY,
+          y: e.pageY
         });
       }}
     >
@@ -75,7 +74,7 @@ export default function Text({ data, username }) {
             <div>
               <Linkify
                 properties={{
-                  target: "_blank",
+                  target: "_blank"
                 }}
               >
                 <p className="px-2 py-1.5 font-sans">{data?.message.text}</p>
@@ -102,7 +101,7 @@ export default function Text({ data, username }) {
         >
           <Linkify
             properties={{
-              target: "_blank",
+              target: "_blank"
             }}
           >
             <p className="break-words pt-1 font-sans leading-relaxed">

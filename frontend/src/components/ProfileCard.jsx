@@ -1,9 +1,10 @@
-import React, { useContext, useRef } from "react";
-import { ChatContext } from "../utils/ChatContext";
+import React, { useRef } from "react";
+import { useMainContext } from "../context/MainContextProvider";
+import { useUserContext } from "../context/UserContextProvider";
 
 export default function ProfileCard() {
-  const { user, setShowProfile, addUser, setCreateGroupChat } =
-    useContext(ChatContext);
+  const { setShowProfile, addUser, setCreateGroupChat } = useMainContext();
+  const { user } = useUserContext();
   const formRef = useRef();
   const submit = (e) => {
     e.preventDefault();

@@ -1,16 +1,17 @@
-import { useContext, useState, useEffect, useRef } from "react";
-import { ChatContext } from "../utils/ChatContext";
+import { useState, useEffect, useRef } from "react";
+import { useMainContext } from "../context/MainContextProvider";
+import { useUserContext } from "../context/UserContextProvider";
 import {
   AiOutlineClose,
   AiOutlineLogout,
-  AiOutlineLoading3Quarters,
+  AiOutlineLoading3Quarters
 } from "react-icons/ai";
 import { motion } from "framer-motion";
 import axios from "axios";
 
 export default function Profile() {
-  const { user, showProfile, setShowProfile, updateUser, logout } =
-    useContext(ChatContext);
+  const { showProfile, setShowProfile, logout } = useMainContext();
+  const { updateUser, user } = useUserContext();
   const [nameInput, setNameInput] = useState(user.name);
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -22,8 +23,8 @@ export default function Profile() {
     const config = {
       headers: {
         "Content-type": "application/json",
-        Authorization: user.token,
-      },
+        Authorization: user.token
+      }
     };
     const formData = new FormData();
     formData.append("name", nameInput);
@@ -47,8 +48,8 @@ export default function Profile() {
     const config = {
       headers: {
         "Content-type": "multipart/form-data",
-        Authorization: user.token,
-      },
+        Authorization: user.token
+      }
     };
     const formData = new FormData();
     formData.append("image", image);
@@ -70,7 +71,7 @@ export default function Profile() {
   const backgroundVariants = {
     hidden: {
       opacity: 0,
-      zIndex: -1,
+      zIndex: -1
     },
     show: {
       opacity: 1,
@@ -79,23 +80,23 @@ export default function Profile() {
         when: "beforeChildren",
         staggerChildren: 0.2,
         // delayChildren: 0.1,
-        duration: 0.15,
-      },
-    },
+        duration: 0.15
+      }
+    }
   };
 
   const profileVariants = {
     hidden: {
       scale: 0.9,
-      opacity: 0,
+      opacity: 0
     },
     show: {
       scale: [0.9, 1.1, 1],
       opacity: 1,
       transition: {
-        duration: 0.25,
-      },
-    },
+        duration: 0.25
+      }
+    }
   };
 
   useEffect(() => {

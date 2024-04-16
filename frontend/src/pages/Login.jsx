@@ -1,15 +1,17 @@
 import { Link } from "react-router-dom";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import axios from "axios";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import { ChatContext } from "../utils/ChatContext";
+import { useMainContext } from "../context/MainContextProvider";
+import { useUserContext } from "../context/UserContextProvider";
 
 export default function Login() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { socket, setUser, user } = useContext(ChatContext);
+  const { socket } = useMainContext();
+  const { user, setUser } = useUserContext();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,12 +19,12 @@ export default function Login() {
     const { username, password } = e.target;
     const config = {
       headers: {
-        "Content-Type": "application/json",
-      },
+        "Content-Type": "application/json"
+      }
     };
     const data = {
       username: username.value,
-      password: password.value,
+      password: password.value
     };
 
     axios
@@ -33,7 +35,7 @@ export default function Login() {
           username: res.data.username,
           name: res.data.name,
           image: res.data.image,
-          token: res.data.token,
+          token: res.data.token
         };
         localStorage.setItem("user", JSON.stringify(user));
         setUser(user);

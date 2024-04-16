@@ -1,12 +1,13 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ChatItem from "./ChatItem";
 import ProfileCard from "./ProfileCard";
-import { ChatContext } from "../utils/ChatContext";
 import { AiOutlineSearch } from "react-icons/ai";
 import { motion, AnimatePresence } from "framer-motion";
+import { useChatContext } from "../context/ChatContextProvider";
 
 export default function ChatList() {
-  const { chats } = useContext(ChatContext);
+  // const { chats } = useContext(ChatContext);
+  const { chats } = useChatContext();
   const [chatList, setChatList] = useState(chats);
 
   useEffect(() => {

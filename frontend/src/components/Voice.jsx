@@ -1,14 +1,14 @@
-import React, { useState, useRef, useContext } from "react";
+import React, { useState, useRef } from "react";
 import { BsPlayFill } from "react-icons/bs";
 import { AiOutlinePause } from "react-icons/ai";
-import { ChatContext } from "../utils/ChatContext";
 import useContextMenu from "../utils/useContextMenu";
 import ContextMenu from "./ContextMenu";
+import { useUserContext } from "../context/UserContextProvider";
 const format = require("format-duration");
 
 export default function Voice({ src, time, sender, username, data }) {
   const { clicked, setClicked, points, setPoints } = useContextMenu();
-  const { user } = useContext(ChatContext);
+  const { user } = useUserContext();
   const audioPlayer = useRef();
   const [currentTime, setCurrentTime] = useState(0);
   const [seekValue, setSeekValue] = useState(0);
@@ -69,7 +69,7 @@ export default function Voice({ src, time, sender, username, data }) {
         setClicked(true);
         setPoints({
           x: e.pageX,
-          y: e.pageY,
+          y: e.pageY
         });
       }}
     >

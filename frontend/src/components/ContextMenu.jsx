@@ -1,8 +1,7 @@
-import { useContext } from "react";
-import { ChatContext } from "../utils/ChatContext";
+import { useMainContext } from "../context/MainContextProvider";
 
 export default function ContextMenu({ top, left, messageID, conversationID }) {
-  const { deleteMessage } = useContext(ChatContext);
+  const { deleteMessage } = useMainContext();
   return (
     <div
       className={`fixed top-0 z-50 w-fit rounded bg-slate-800 p-4 text-white`}

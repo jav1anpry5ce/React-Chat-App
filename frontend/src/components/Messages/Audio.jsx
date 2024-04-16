@@ -1,4 +1,3 @@
-import React from "react";
 import Voice from "../Voice";
 
 export default function Audio({ data, username }) {

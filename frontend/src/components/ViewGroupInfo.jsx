@@ -1,14 +1,18 @@
-import { useContext, useEffect, useState } from "react";
-import { ChatContext } from "../utils/ChatContext";
+import { useEffect, useState } from "react";
+import { useMainContext } from "../context/MainContextProvider";
 import { motion } from "framer-motion";
 import { AiOutlineClose, AiOutlineLoading3Quarters } from "react-icons/ai";
 import axios from "axios";
+import { useUserContext } from "../context/UserContextProvider";
+import { useChatContext } from "../context/ChatContextProvider";
 
 export default function ViewGroupInfo() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const { group, setGroup, changeGroup, chats, user } = useContext(ChatContext);
+  const { group, setGroup, changeGroup } = useMainContext();
+  const { user } = useUserContext();
+  const { chats } = useChatContext();
   const [name, setName] = useState(group?.name);
   const [image, setImage] = useState(group?.image);
   const [disabled, setDisables] = useState(true);
@@ -84,14 +88,14 @@ export default function ViewGroupInfo() {
       id: group.id,
       name,
       image,
-      members: membersToAdd,
+      members: membersToAdd
     };
     changeGroup(data);
   };
 
   const variants = {
     hidden: { opacity: 0, zIndex: -1 },
-    visible: { opacity: 1, zIndex: 60 },
+    visible: { opacity: 1, zIndex: 60 }
   };
 
   useEffect(() => {
@@ -144,7 +148,7 @@ export default function ViewGroupInfo() {
           }}
         >
           <AiOutlineClose
-            className="absolute top-2 right-2 text-white hover:cursor-pointer hover:text-red-500"
+            className="absolute right-2 top-2 text-white hover:cursor-pointer hover:text-red-500"
             fontSize={26}
           />
         </button>

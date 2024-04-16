@@ -1,11 +1,9 @@
-import React, { useContext } from "react";
-import { ChatContext } from "../utils/ChatContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCallContext } from "../context/CallContextProvider";
 const format = require("format-duration");
 
 export default function ReturnCall() {
-  const { setHide, hide, currentTime, caller, calling } =
-    useContext(ChatContext);
+  const { currentTime, caller, calling, setHide, hide } = useCallContext();
   if (hide)
     return (
       <AnimatePresence>
@@ -14,7 +12,7 @@ export default function ReturnCall() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed z-[9999] w-full cursor-pointer bg-emerald-600 
-    px-7 text-white hover:animate-none lg:top-5 lg:right-28
+    px-7 text-white hover:animate-none lg:right-28 lg:top-5
     lg:w-auto lg:animate-pulse lg:rounded-full"
           onClick={() => {
             setHide((prev) => !prev);

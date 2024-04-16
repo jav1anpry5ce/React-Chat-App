@@ -1,4 +1,3 @@
-import { useContext } from "react";
 import {
   ChatList,
   Chat,
@@ -7,15 +6,19 @@ import {
   ReturnCall,
   CreateGroupInterface,
   ViewGroupInfo,
-  Notifications,
+  Notifications
 } from "../components";
 import { Transition } from "@headlessui/react";
 import { AiOutlineMenuFold } from "react-icons/ai";
-import { ChatContext } from "../utils/ChatContext";
+import { useMainContext } from "../context/MainContextProvider";
 import { Navigate } from "react-router-dom";
+import { useUserContext } from "../context/UserContextProvider";
+import { useCallContext } from "../context/CallContextProvider";
 
 function App() {
-  const { show, setShow, hide, user } = useContext(ChatContext);
+  const { show, setShow } = useMainContext();
+  const { user } = useUserContext();
+  const { hide } = useCallContext();
 
   if (!user || Object.keys(user).length === 0) return <Navigate to="/login" />;
   return (

@@ -8,7 +8,7 @@ const logger = require("./config/logger.config");
 module.exports = function (io, pubClient, emitter) {
   io.on("connection", function (socket) {
     logger.info(
-      `connection established from ${socket.request.socket._peername.address}:${socket.request.socket._peername.port}`
+      `connection established from ${socket.handshake.address}:${socket.request.socket._peername.port}`
     );
 
     messageHandler(socket, emitter, pubClient);

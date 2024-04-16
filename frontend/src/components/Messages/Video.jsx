@@ -1,11 +1,10 @@
-import React, { useContext } from "react";
-import { ChatContext } from "../../utils/ChatContext";
 import useContextMenu from "../../utils/useContextMenu";
 import ContextMenu from "../ContextMenu";
+import { useUserContext } from "../../context/UserContextProvider";
 
 export default function Video({ data, username }) {
   const { clicked, setClicked, points, setPoints } = useContextMenu();
-  const { user } = useContext(ChatContext);
+  const { user } = useUserContext();
   return (
     <div
       className={`${
@@ -18,7 +17,7 @@ export default function Video({ data, username }) {
         setClicked(true);
         setPoints({
           x: e.pageX,
-          y: e.pageY,
+          y: e.pageY
         });
       }}
     >

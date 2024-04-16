@@ -1,14 +1,20 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import useRecorder from "../utils/useRecorder";
 import { BsMicFill, BsStopCircle } from "react-icons/bs";
 import { AiOutlineCheckCircle } from "react-icons/ai";
 import { FcAddImage } from "react-icons/fc";
 import { MdCancel } from "react-icons/md";
-import { ChatContext } from "../utils/ChatContext";
+import { useMainContext } from "../context/MainContextProvider";
+import { useChatContext } from "../context/ChatContextProvider";
+import { useUserContext } from "../context/UserContextProvider";
 import { motion } from "framer-motion";
+import { useMessageContext } from "../context/MessageContextProvider";
 
 export default function ChatBottom() {
-  const { socket, chatting, user, sendMessage } = useContext(ChatContext);
+  const { socket } = useMainContext();
+  const { sendMessage } = useMessageContext();
+  const { user } = useUserContext();
+  const { chatting } = useChatContext();
   const [text, setText] = useState("");
   const [file, setFile] = useState(null);
   let [isRecording, startRecording, stopRecording, audio, cancelRecording] =
@@ -20,9 +26,9 @@ export default function ChatBottom() {
       const data = {
         audio,
         conversationId: chatting.id,
-        chatType: chatting.chatType,
+        chatType: chatting.chatType
       };
-      sendMessage(data);
+      sendMessage(data, socket);
     }
     // eslint-disable-next-line
   }, [audio]);
@@ -33,9 +39,9 @@ export default function ChatBottom() {
         file,
         conversationId: chatting.id,
         text,
-        chatType: chatting.chatType,
+        chatType: chatting.chatType
       };
-      sendMessage(data).then(() => {
+      sendMessage(data, socket).then(() => {
         setFile(null);
         setText("");
         document.getElementById("file-input").value = null;
@@ -44,9 +50,9 @@ export default function ChatBottom() {
       const data = {
         conversationId: chatting.id,
         text,
-        chatType: chatting.chatType,
+        chatType: chatting.chatType
       };
-      sendMessage(data).then(() => {
+      sendMessage(data, socket).then(() => {
         setText("");
       });
     }
@@ -61,7 +67,7 @@ export default function ChatBottom() {
       input.addEventListener("keydown", (event) => {
         socket.emit("typing", {
           username: chatting?.username,
-          typing: user?.username,
+          typing: user?.username
         });
         if (event.code === "Enter") {
           event.preventDefault();
@@ -81,7 +87,7 @@ export default function ChatBottom() {
   return (
     <motion.div
       layout
-      className="flex items-center space-x-2 bg-slate-700/90 py-4 px-2 text-white dark:bg-slate-600/95"
+      className="flex items-center space-x-2 bg-slate-700/90 px-2 py-4 text-white dark:bg-slate-600/95"
     >
       <div className="flex space-x-2">
         <FcAddImage size={25} className="cursor-pointer" onClick={addFile} />

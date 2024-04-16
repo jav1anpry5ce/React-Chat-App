@@ -1,13 +1,14 @@
-import React, { useContext } from "react";
 import { AiOutlineEye } from "react-icons/ai";
-import { ChatContext } from "../../utils/ChatContext";
+import { useMainContext } from "../../context/MainContextProvider";
 import Linkify from "react-linkify";
 import useContextMenu from "../../utils/useContextMenu";
 import ContextMenu from "../ContextMenu";
+import { useUserContext } from "../../context/UserContextProvider";
 
 export default function Image({ data, username }) {
-  const { setViewing, setViewSrc, user } = useContext(ChatContext);
+  const { setViewing, setViewSrc } = useMainContext();
   const { clicked, setClicked, points, setPoints } = useContextMenu();
+  const { user } = useUserContext();
 
   return (
     <div
@@ -21,7 +22,7 @@ export default function Image({ data, username }) {
         setClicked(true);
         setPoints({
           x: e.pageX,
-          y: e.pageY,
+          y: e.pageY
         });
       }}
     >
@@ -56,7 +57,7 @@ export default function Image({ data, username }) {
       {data?.message.text && (
         <Linkify
           properties={{
-            target: "_blank",
+            target: "_blank"
           }}
         >
           <p className="break-words p-2 pb-4 font-sans">{data?.message.text}</p>

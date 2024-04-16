@@ -1,34 +1,30 @@
-import React, { useEffect, useState, useContext, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import ChatBottom from "./ChatBottom";
 import ChatHead from "./ChatHead";
 import Message from "./Message";
 import ViewImage from "./ViewImage";
 import { AiOutlineMenuUnfold } from "react-icons/ai";
 import { BsChevronDoubleDown } from "react-icons/bs";
-import { ChatContext } from "../utils/ChatContext";
+import { useMainContext } from "../context/MainContextProvider";
+import { useChatContext } from "../context/ChatContextProvider";
 import { isToday, isYesterday } from "date-fns";
 import { Transition } from "@headlessui/react";
 import { motion } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
+import { useUserContext } from "../context/UserContextProvider";
 
 function scrollToBottom() {
   const s = document.getElementById("scroll");
   s.scrollTo({
     top: s.scrollHeight - s.clientHeight,
-    behavior: "smooth",
+    behavior: "smooth"
   });
 }
 
 export default function Chat() {
-  const {
-    chatting,
-    user,
-    setShow,
-    chats,
-    hide,
-    setChatting,
-    fetchMoreMessages,
-  } = useContext(ChatContext);
+  const { setShow, hide } = useMainContext();
+  const { chatting, chats, fetchMoreMessages, setChatting } = useChatContext();
+  const { user } = useUserContext();
   const [searchParams] = useSearchParams();
   const [typing, setTyping] = useState(false);
   const [bottom, setBottom] = useState(true);
@@ -73,7 +69,7 @@ export default function Chat() {
       setChatting(chat);
     }
     // eslint-disable-next-line
-  }, []);
+  }, [chats]);
 
   useEffect(() => {
     const container = divRef.current;
@@ -90,7 +86,7 @@ export default function Chat() {
           setChat((prevChat) => ({
             ...prevChat,
             messages: updatedMessages,
-            nextPageUrl: newMessages.nextPageUrl,
+            nextPageUrl: newMessages.nextPageUrl
           }));
 
           setTimeout(() => {

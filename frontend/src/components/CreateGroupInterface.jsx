@@ -1,18 +1,21 @@
-import { useContext, useRef, useState, useEffect } from "react";
-import { ChatContext } from "../utils/ChatContext";
+import { useRef, useState, useEffect } from "react";
+import { useMainContext } from "../context/MainContextProvider";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { useUserContext } from "../context/UserContextProvider";
 
 export default function CreateGroupInterface() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { createGroup, createGroupChat, setCreateGroupChat, user, clear, setClear } =
-    useContext(ChatContext);
+  const { createGroup, createGroupChat, setCreateGroupChat, clear, setClear } =
+    useMainContext();
+  const { user } = useUserContext();
+
   const formRef = useRef(null);
 
-  useEffect(() => { 
+  useEffect(() => {
     if (clear) {
       setMembers([]);
       setLoading(false);
@@ -32,7 +35,7 @@ export default function CreateGroupInterface() {
     const data = {
       groupName: e.target.groupName.value,
       groupImage: e.target.groupImage.value,
-      members,
+      members
     };
     createGroup(data);
   };
@@ -73,7 +76,7 @@ export default function CreateGroupInterface() {
 
   const variants = {
     hidden: { opacity: 0, zIndex: -1 },
-    visible: { opacity: 1, zIndex: 60 },
+    visible: { opacity: 1, zIndex: 60 }
   };
   return (
     <motion.div
