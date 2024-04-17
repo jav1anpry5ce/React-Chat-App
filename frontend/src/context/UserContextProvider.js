@@ -50,13 +50,20 @@ export const UserProvider = ({ children }) => {
     setUser(updatedUser);
   };
 
+  const clearUser = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+  };
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     getUpdateUser(user);
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, setUser, updateUser, handleUserData }}>
+    <UserContext.Provider
+      value={{ user, setUser, updateUser, handleUserData, clearUser }}
+    >
       {children}
     </UserContext.Provider>
   );

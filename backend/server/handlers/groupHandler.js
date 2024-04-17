@@ -27,7 +27,7 @@ module.exports = function (socket, emitter, pubClient) {
         image: groupData.groupImage,
         members: groupData.members,
         messages: [],
-        chatTyoe: "group",
+        chatType: "group"
       };
       await sql.createGroupChat(group);
       const members = groupData.members;

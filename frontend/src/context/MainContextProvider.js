@@ -13,7 +13,7 @@ const socket = io(`https://api.chatapp.home`, {
 });
 
 export const MainProvider = ({ children }) => {
-  const { user, setUser, handleUserData } = useUserContext();
+  const { user, handleUserData, clearUser } = useUserContext();
   const {
     chats,
     setChats,
@@ -22,7 +22,11 @@ export const MainProvider = ({ children }) => {
     setChatting,
     addMessageToChat,
     updateChats,
-    updateGroupChat
+    updateGroupChat,
+    clearChats,
+    updateChat,
+    addGroupChat,
+    addMemberToGroup
   } = useChatContext();
   const { onDeleteMessage } = useMessageContext();
   const {
@@ -134,10 +138,8 @@ export const MainProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem("user");
-    localStorage.setItem("chats", JSON.stringify([]));
-    setChats([]);
-    setUser(null);
+    clearUser();
+    clearChats();
   };
 
   const addUser = (userToAdd) => {
@@ -178,15 +180,7 @@ export const MainProvider = ({ children }) => {
     socket.on("newMessage", async (data) => {
       try {
         swapChat(data);
-        addMessageToChat(data);
-        const chat = chats.find((chat) => chat.id === data.conversationId);
-        if (!chat) {
-          socket.emit("getChatInfo", {
-            chatId: data.conversationId,
-            username: user?.username
-          });
-        }
-
+        addMessageToChat(data, socket);
         notifyUser(data);
       } catch (error) {
         console.error("Error handling new message:", error);
@@ -194,9 +188,7 @@ export const MainProvider = ({ children }) => {
     });
 
     socket.on("chatInfo", (chat) => {
-      chat.unread = 1;
-      localStorage.setItem("chats", JSON.stringify([chat, ...chats]));
-      setChats([chat, ...chats]);
+      updateChat(chat);
     });
 
     socket.on("messageDeleted", ({ messageID, conversationID }) => {
@@ -208,16 +200,7 @@ export const MainProvider = ({ children }) => {
     });
 
     socket.on("newGroup", (data) => {
-      const chat = data;
-      const chats = JSON.parse(localStorage.getItem("chats"));
-      if (!chats) return;
-      if (!chats.find((chat) => chat.username === data.id)) {
-        setCreateGroupChat(false);
-        setClear(true);
-        const newChats = chats.concat(chat);
-        localStorage.setItem("chats", JSON.stringify(newChats));
-        setChats(newChats);
-      }
+      addGroupChat(data, setCreateGroupChat, setClear);
     });
 
     socket.on("test", (data) => {
@@ -229,28 +212,7 @@ export const MainProvider = ({ children }) => {
     });
 
     socket.on("groupMemberAdded", (data) => {
-      try {
-        let chats = JSON.parse(localStorage.getItem("chats")) || [];
-
-        // Find the chat corresponding to the provided conversation ID
-        const chat = chats.find((chat) => chat.id === data.id);
-
-        // If the chat does not exist, it means it's a new chat, so add it to the chats array
-        if (!chat) {
-          chats.push(data);
-        } else {
-          // Update the members of the existing chat
-          chat.members = data.members;
-        }
-
-        // Update the local storage with the modified chats array
-        localStorage.setItem("chats", JSON.stringify(chats));
-
-        // Update the state with the modified chats array
-        setChats(chats);
-      } catch (error) {
-        console.error("Error handling group member addition:", error);
-      }
+      addMemberToGroup(data);
     });
 
     socket.on("groupUpdated", (data) => {
@@ -276,11 +238,8 @@ export const MainProvider = ({ children }) => {
 
   useEffect(() => {
     const handleTokenNotValid = () => {
-      localStorage.removeItem("user");
-      localStorage.setItem("chats", JSON.stringify([]));
-      setUser(null);
-      setChats([]);
-      setChatting(null);
+      clearUser();
+      clearChats();
     };
 
     if (user) {
@@ -343,8 +302,6 @@ export const MainProvider = ({ children }) => {
       clearInterval(interval);
     };
   }, [chatting]);
-
-  
 
   useEffect(() => {
     const interval = setInterval(() => {
