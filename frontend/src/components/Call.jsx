@@ -4,16 +4,14 @@ import { Dialog, Transition } from "@headlessui/react";
 import { ImPhoneHangUp } from "react-icons/im";
 import ring from "../assets/ring.mp3";
 import {
-  BsCameraVideoFill,
-  BsCameraVideoOffFill,
   BsFillMicMuteFill,
   BsFillTelephoneFill,
   BsMicFill
 } from "react-icons/bs";
-import { MdScreenShare } from "react-icons/md";
 import { AiOutlineClose } from "react-icons/ai";
-import { motion } from "framer-motion";
 import { useCallContext } from "../context/CallContextProvider";
+import VideoRinging from "./VideoRinging";
+import VideoChatContainer from "./VideoChatContainer";
 
 const format = require("format-duration");
 
@@ -31,12 +29,8 @@ export default function Call() {
     muteUnmute,
     onPlaying,
     currentTime,
-    myVideo,
     type,
     userStream,
-    updateVideo,
-    myVideoStatus,
-    handleScreenSharing,
     hide,
     setHide
   } = useCallContext();
@@ -140,134 +134,10 @@ export default function Call() {
                 <div className="flex items-center justify-center space-x-0.5">
                   {callAccepted ? (
                     <div className="relative flex h-screen w-full items-center justify-center">
-                      <div className="flex h-screen flex-col items-center justify-center space-y-1.5">
-                        <div className="h-auto md:w-[53rem]">
-                          <video
-                            ref={userStream}
-                            autoPlay
-                            className="w-full rounded"
-                            onTimeUpdate={onPlaying}
-                            playsInline
-                          />
-                        </div>
-                        <motion.div
-                          drag
-                          dragConstraints={{
-                            top: Math.round(-(window.innerHeight / 1.3)),
-                            left: Math.round(-(window.innerWidth / 1.2)),
-                            right: 0,
-                            bottom: 0
-                          }}
-                          className="z-30 h-auto cursor-move md:absolute md:bottom-0 md:right-0 md:w-[15rem]"
-                        >
-                          <video
-                            ref={myVideo}
-                            autoPlay
-                            muted
-                            className="w-full rounded"
-                            playsInline
-                          />
-                        </motion.div>
-                      </div>
-                      <div className="absolute bottom-1 z-50 flex w-full items-center justify-center space-x-4">
-                        <div
-                          className="cursor-pointer rounded-full bg-red-500 px-2 py-2 text-white shadow-md hover:shadow-lg"
-                          onClick={() => leaveCall(socket)}
-                        >
-                          <ImPhoneHangUp className="h-8 w-8" />
-                        </div>
-                        {myMicStatus ? (
-                          <div
-                            className="cursor-pointer rounded-full bg-white px-2 py-2 shadow-md hover:shadow-lg"
-                            onClick={muteUnmute}
-                          >
-                            <BsMicFill className="h-8 w-8" />
-                          </div>
-                        ) : (
-                          <div
-                            className="cursor-pointer rounded-full bg-red-500 px-2 py-2 text-white shadow-md hover:shadow-lg"
-                            onClick={muteUnmute}
-                          >
-                            <BsFillMicMuteFill className="h-8 w-8" />
-                          </div>
-                        )}
-                        {myVideoStatus ? (
-                          <div
-                            className="cursor-pointer rounded-full bg-gray-100 px-2 py-2 shadow-md hover:shadow-lg"
-                            onClick={updateVideo}
-                          >
-                            <BsCameraVideoFill className="h-8 w-8" />
-                          </div>
-                        ) : (
-                          <div
-                            className="cursor-pointer rounded-full bg-red-500 px-2 py-2 text-white shadow-md hover:shadow-lg"
-                            onClick={updateVideo}
-                          >
-                            <BsCameraVideoOffFill className="h-8 w-8" />
-                          </div>
-                        )}
-                        <div
-                          className="cursor-pointer rounded-full bg-gray-100 px-2 py-2 shadow-md hover:shadow-lg"
-                          onClick={handleScreenSharing}
-                        >
-                          <MdScreenShare className="h-8 w-8" />
-                        </div>
-                      </div>
+                      <VideoChatContainer />
                     </div>
                   ) : (
-                    <div className="relative">
-                      <video
-                        ref={myVideo}
-                        autoPlay
-                        muted
-                        className="aspect-auto h-auto w-[40rem] rounded"
-                        playsInline
-                      />
-                      <div className="absolute bottom-0 z-10 flex w-full items-center justify-center space-x-8 px-4 py-2">
-                        <div
-                          className="cursor-pointer rounded-full bg-red-500 px-2 py-2 text-white shadow-md hover:shadow-lg"
-                          onClick={() => leaveCall(socket)}
-                        >
-                          <ImPhoneHangUp className="h-8 w-8" />
-                        </div>
-                        {myMicStatus ? (
-                          <div
-                            className="cursor-pointer rounded-full bg-green-500 px-2 py-2 shadow-md hover:shadow-lg"
-                            onClick={muteUnmute}
-                          >
-                            <BsMicFill className="h-8 w-8" />
-                          </div>
-                        ) : (
-                          <div
-                            className="cursor-pointer rounded-full bg-red-500 px-2 py-2 text-white shadow-md hover:shadow-lg"
-                            onClick={muteUnmute}
-                          >
-                            <BsFillMicMuteFill className="h-8 w-8" />
-                          </div>
-                        )}
-                        {myVideoStatus ? (
-                          <div
-                            className="cursor-pointer rounded-full bg-gray-100 px-2 py-2 shadow-md hover:shadow-lg"
-                            onClick={updateVideo}
-                          >
-                            <BsCameraVideoFill className="h-8 w-8" />
-                          </div>
-                        ) : (
-                          <div
-                            className="cursor-pointer rounded-full bg-red-500 px-2 py-2 text-white shadow-md hover:shadow-lg"
-                            onClick={updateVideo}
-                          >
-                            <BsCameraVideoOffFill className="h-8 w-8" />
-                          </div>
-                        )}
-                        <div
-                          className="cursor-pointer rounded-full bg-gray-100 px-2 py-2 shadow-md hover:shadow-lg"
-                          onClick={handleScreenSharing}
-                        >
-                          <MdScreenShare className="h-8 w-8" />
-                        </div>
-                      </div>
-                    </div>
+                    <VideoRinging />
                   )}
                 </div>
               </div>

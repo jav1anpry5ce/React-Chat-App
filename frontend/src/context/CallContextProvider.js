@@ -191,11 +191,11 @@ export const CallProvider = ({ children }) => {
   const resetCall = () => {
     if (stream) stream.getTracks().forEach((track) => track.stop());
 
-    setStream(null);
-    setReceivingCall(false);
-    setCaller(null);
-    setCallAccepted(false);
     setCalling(null);
+    setReceivingCall(false);
+    setCallAccepted(false);
+    setCaller(null);
+    setStream(null);
     setMyMicStatus(true);
     setMyVideoStatus(true);
     setScreenShare(false);
@@ -203,7 +203,6 @@ export const CallProvider = ({ children }) => {
     setCurrentTime(0);
     setHide(false);
 
-    connectionRef.current = null;
     screenTrackRef.current = null;
     myVideo.current = null;
     userStream.current = null;
