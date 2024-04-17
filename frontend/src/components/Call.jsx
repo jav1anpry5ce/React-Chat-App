@@ -60,10 +60,10 @@ export default function Call() {
   }, [receivingCall, calling, audio, callAccepted]);
 
   useEffect(() => {
-    if (callAccepted) {
+    if (callAccepted || calling || receivingCall) {
       setShow(!hide);
     }
-  }, [hide, callAccepted]);
+  }, [hide, callAccepted, calling, receivingCall]);
 
   return (
     <Transition.Root show={show} as={Fragment}>

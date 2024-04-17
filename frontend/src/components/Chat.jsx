@@ -12,6 +12,7 @@ import { Transition } from "@headlessui/react";
 import { motion } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
 import { useUserContext } from "../context/UserContextProvider";
+import { useCallContext } from "../context/CallContextProvider";
 
 function scrollToBottom() {
   const s = document.getElementById("scroll");
@@ -22,8 +23,9 @@ function scrollToBottom() {
 }
 
 export default function Chat() {
-  const { setShow, hide } = useMainContext();
+  const { setShow } = useMainContext();
   const { chatting, chats, fetchMoreMessages, setChatting } = useChatContext();
+  const { hide } = useCallContext();
   const { user } = useUserContext();
   const [searchParams] = useSearchParams();
   const [typing, setTyping] = useState(false);

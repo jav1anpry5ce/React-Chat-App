@@ -28,6 +28,7 @@ export const CallProvider = ({ children }) => {
   const callUser = async (data, socket) => {
     const stream = await getUserMedia(data);
     constructPeer(socket, data, stream);
+    setStream(stream);
     setCalling(true);
   };
 
@@ -64,9 +65,7 @@ export const CallProvider = ({ children }) => {
 
   const ignoreCall = (user, socket) => {
     socket.emit("ignoreCall", caller?.from || user);
-    setReceivingCall(false);
-    setCaller(null);
-    setCallAccepted(false);
+    resetCall();
   };
 
   const leaveCall = (socket) => {
@@ -190,6 +189,8 @@ export const CallProvider = ({ children }) => {
   };
 
   const resetCall = () => {
+    if (stream) stream.getTracks().forEach((track) => track.stop());
+
     setStream(null);
     setReceivingCall(false);
     setCaller(null);
@@ -201,6 +202,11 @@ export const CallProvider = ({ children }) => {
     setType("");
     setCurrentTime(0);
     setHide(false);
+
+    connectionRef.current = null;
+    screenTrackRef.current = null;
+    myVideo.current = null;
+    userStream.current = null;
 
     if (connectionRef.current) {
       window.location.reload();
@@ -214,7 +220,6 @@ export const CallProvider = ({ children }) => {
   const onCallAccepted = (signal) => {
     setCallAccepted(true);
     if (connectionRef.current) connectionRef.current.signal(signal);
-    // connectionRef.current.signal = signal;
   };
 
   useEffect(() => {
