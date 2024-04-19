@@ -51,12 +51,16 @@ export default function Voice({ src, time, sender, username, data }) {
   };
 
   const update = () => {
-    if (audioPlayer.current.duration === Infinity) {
-      audioPlayer.current.currentTime = 1e101;
+    try {
+      if (audioPlayer.current.duration === Infinity) {
+        audioPlayer.current.currentTime = 1e101;
+      }
+      setTimeout(() => {
+        audioPlayer.current.currentTime = 0;
+      }, 500);
+    } catch (error) {
+      console.log(error);
     }
-    setTimeout(() => {
-      audioPlayer.current.currentTime = 0;
-    }, 500);
   };
 
   return (

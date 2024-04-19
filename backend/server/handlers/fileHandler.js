@@ -1,6 +1,8 @@
-const sql = require("../sql");
 const fs = require("fs");
 const getUsers = require("../getUsers");
+const { getUser } = require("../sql/userSql");
+const { getConversationById } = require("../sql/conversationSql");
+const { createMessage } = require("../sql/messageSql");
 const logger = require("../config/logger.config");
 
 module.exports = function (data, emitter, pubClient) {
@@ -19,19 +21,19 @@ module.exports = function (data, emitter, pubClient) {
         }
         const messageData = {
           ...data.message,
-          file: `${process.env.IP}/${fileName}`,
+          file: `${process.env.IP}/${fileName}`
         };
 
         const message = {
           id: data.id,
           conversationId: data.conversationId,
-          sender: await sql.getUser(data.sender),
-          receiver: await sql.getUser(data.receiver),
+          sender: await getUser(data.sender),
+          receiver: await getUser(data.receiver),
           message: messageData,
-          time: data.time,
+          time: data.time
         };
-        await sql.createMessage(message);
-        const conversation = await sql.getConversationById(data.conversationId);
+        await createMessage(message);
+        const conversation = await getConversationById(data.conversationId);
         const toUsers = JSON.parse(conversation.users);
         const users = await getUsers(pubClient);
         users.forEach((user) => {
@@ -42,6 +44,6 @@ module.exports = function (data, emitter, pubClient) {
       }
     );
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message);
   }
 };

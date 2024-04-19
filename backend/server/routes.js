@@ -1,5 +1,14 @@
 const express = require("express");
-const sql = require("./sql");
+const {
+  getUser,
+  updateUser,
+  createUser,
+  getUserByToken,
+  uploadPhoto,
+  login
+} = require("./sql/userSql");
+const { get_or_create_token, validateToken } = require("./sql/tokenSql");
+const { getMoreMessages } = require("./sql/messageSql");
 const bcrypt = require("bcrypt");
 const router = express.Router();
 const shortid = require("shortid");
@@ -11,13 +20,12 @@ router.post("/signup", (req, res) => {
   const { username, name, password } = req.body;
   bcrypt.hash(password, saltRounds, function (err, hash) {
     if (err) return res.send({ password: err.message });
-    sql
-      .createUser({ username, name, password: hash })
+    createUser({ username, name, password: hash })
       .then(() => {
         res.status(201).send({ message: "User created" });
       })
       .catch((err) => {
-        logger.error(err);
+        logger.error(err.message);
         res.status(500).send({ username: "username is not available" });
       });
   });
@@ -25,25 +33,23 @@ router.post("/signup", (req, res) => {
 
 router.post("/login", (req, res) => {
   const { username, password } = req.body;
-  sql
-    .login(username)
+  login(username)
     .then((user) => {
       bcrypt.compare(password, user.password, function (err, result) {
         if (err) return res.send({ password: err.message });
         if (result) {
           const token = shortid.generate();
-          sql
-            .get_or_create_token({ token, username })
+          get_or_create_token({ token, username })
             .then(({ token }) => {
               res.status(200).send({
                 name: user.name,
                 image: user.image,
                 username: user.username,
-                token,
+                token
               });
             })
             .catch((err) => {
-              logger.error(err);
+              logger.error(err.message);
               res.status(500).send({ message: err.message });
             });
         } else {
@@ -52,24 +58,23 @@ router.post("/login", (req, res) => {
       });
     })
     .catch((err) => {
-      logger.error(err);
+      logger.error(err.message);
       res.status(401).send({ message: "check username/password" });
     });
 });
 
 router.get("/users/:username", (req, res) => {
   const { username } = req.params;
-  sql
-    .getUser(username)
+  getUser(username)
     .then((user) => {
       res.status(200).send({
         name: user.name,
         image: user.image,
-        username: user.username,
+        username: user.username
       });
     })
     .catch((err) => {
-      logger.error(err);
+      logger.error(err.message);
       res.status(404).send({ message: "user not found" });
     });
 });
@@ -77,21 +82,19 @@ router.get("/users/:username", (req, res) => {
 router.get("/user", (req, res) => {
   const token = req.headers.authorization;
   if (!token) return res.status(401).send({ message: "unauthorized" });
-  sql
-    .validateToken(token)
+  validateToken(token)
     .then(() => {
-      sql
-        .getUserByToken(token)
+      getUserByToken(token)
         .then((user) => {
           res.status(200).send({
             name: user.name,
             image: user.image,
             username: user.username,
-            token,
+            token
           });
         })
         .catch((err) => {
-          logger.error(err);
+          logger.error(err.message);
           res.status(500).send({ message: "unauthorized" });
         });
     })
@@ -105,11 +108,9 @@ router.post("/user/update", async (req, res) => {
   const { name } = req.body;
   const token = req.headers.authorization;
 
-  sql
-    .getUserByToken(token)
+  getUserByToken(token)
     .then((user) => {
-      sql
-        .updateUser(user.username, name)
+      updateUser(user.username, name)
         .then((user) => {
           res.status(200).send(user);
         })
@@ -118,7 +119,7 @@ router.post("/user/update", async (req, res) => {
         });
     })
     .catch((err) => {
-      logger.error(err);
+      logger.error(err.message);
       res.status(500).send({ message: "Something went wrong!" });
     });
 });
@@ -130,15 +131,13 @@ router.post("/upload", async (req, res) => {
   if (!image) {
     res.status(400).send({ message: "Something went wrong!" });
   }
-  sql
-    .validateToken(token)
+  validateToken(token)
     .then(() => {
       const filename = shortid.generate() + ".jpg";
       const image_url = `${IP}/${filename}`;
       image.mv("./files/" + filename, (err) => {
         if (err) return res.status(500).send({ message: err.message });
-        sql
-          .uploadPhoto(token, image_url)
+        uploadPhoto(token, image_url)
           .then((user) => {
             res.status(200).send(user);
           })
@@ -148,7 +147,7 @@ router.post("/upload", async (req, res) => {
       });
     })
     .catch((err) => {
-      logger.error(err);
+      logger.error(err.message);
       res.status(500).send({ message: "unauthorized" });
     });
 });
@@ -158,13 +157,17 @@ router.get("/messages", async (req, res) => {
   const token = req.headers.authorization;
   if (!token) return res.status(401).send({ message: "unauthorized" });
 
-  const messages = await sql.getMoreMessages(
-    conversationId,
-    Number(limit),
-    Number(offset)
-  );
-
-  return res.status(200).send({ messages });
+  try {
+    const messages = await getMoreMessages(
+      conversationId,
+      Number(limit),
+      Number(offset)
+    );
+    return res.status(200).send({ messages });
+  } catch (err) {
+    logger.error(err.message);
+    return res.status(500).send({ message: "Something went wrong!" });
+  }
 });
 
 module.exports = router;

@@ -242,13 +242,14 @@ export const MainProvider = ({ children }) => {
       clearChats();
     };
 
-    if (user) {
+    socket.emit("userData", user);
+
+    socket.on("connect", () => {
+      console.log("Connected to server");
       socket.emit("userData", user);
-      socket.on("connect", () => {
-        socket.emit("userData", user);
-      });
-      if (user.id) socket.emit("getChats", user.username);
-    }
+    });
+
+    if (user?.id) socket.emit("getChats", user.username);
 
     socket.on("tokenNotValid", handleTokenNotValid);
     socket.on("userData", handleUserData);
@@ -264,8 +265,6 @@ export const MainProvider = ({ children }) => {
   useEffect(() => {
     const handleUserAdded = (data) => {
       if (data.username !== user?.username) {
-        const chats = JSON.parse(localStorage.getItem("chats")) || [];
-
         // Check if the user already exists in chats
         const existingChat = chats.find((chat) => chat.id === data.id);
 

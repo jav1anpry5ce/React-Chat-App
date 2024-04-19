@@ -1,6 +1,14 @@
-const sql = require("../sql");
 const fs = require("fs");
 const getUsers = require("../getUsers");
+const { getUser } = require("../sql/userSql");
+const { createMessage } = require("../sql/messageSql");
+const {
+  createGroupChat,
+  getGroupChatById,
+  updateGroupChat,
+  addMemberToGroup,
+  getGroupMembers
+} = require("../sql/groupSql");
 const shortid = require("shortid");
 const logger = require("../config/logger.config");
 
@@ -15,7 +23,7 @@ module.exports = function (socket, emitter, pubClient) {
         textHandler(messageData, emitter, pubClient);
       }
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
     }
   });
 
@@ -29,7 +37,7 @@ module.exports = function (socket, emitter, pubClient) {
         messages: [],
         chatType: "group"
       };
-      await sql.createGroupChat(group);
+      await createGroupChat(group);
       const members = groupData.members;
       const users = await getUsers(pubClient);
       users.forEach((user) => {
@@ -40,16 +48,16 @@ module.exports = function (socket, emitter, pubClient) {
         });
       });
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
       emitter.to(socket.id).emit("error", {
-        message: "Something went wrong. Try again later.",
+        message: "Something went wrong. Try again later."
       });
     }
   });
 
   socket.on("changeGroup", async (groupData) => {
     try {
-      const group = await sql.updateGroupChat(groupData);
+      const group = await updateGroupChat(groupData);
       const members = group.members;
       const users = await getUsers(pubClient);
       users.forEach((user) => {
@@ -60,17 +68,17 @@ module.exports = function (socket, emitter, pubClient) {
         });
       });
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
       emitter.to(socket.id).emit("error", {
-        message: "Something went wrong. Try again later.",
+        message: "Something went wrong. Try again later."
       });
     }
   });
 
   socket.on("addGroupMember", async ({ groupId, username }) => {
     try {
-      await sql.addGroupMember(groupId, username);
-      const group = await sql.getGroupChatById(groupId);
+      await addMemberToGroup({ groupId, username });
+      const group = await getGroupChatById(groupId);
       const members = group.members;
       const users = await getUsers(pubClient);
       users.forEach((user) => {
@@ -81,9 +89,9 @@ module.exports = function (socket, emitter, pubClient) {
         });
       });
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
       emitter.to(socket.id).emit("error", {
-        message: "Something went wrong. Try again later.",
+        message: "Something went wrong. Try again later."
       });
     }
   });
@@ -105,19 +113,19 @@ function fileHandler(message, emitter, pubClient) {
         }
         const messageData = {
           ...message.message,
-          file: `${process.env.IP}/${fileName}`,
+          file: `${process.env.IP}/${fileName}`
         };
 
         const message = {
           id: message.id,
           conversationId: message.conversationId,
-          sender: await sql.getUser(message.sender),
+          sender: await getUser(message.sender),
           receiver: { username: message.conversationId },
           message: messageData,
-          time: message.time,
+          time: message.time
         };
-        await sql.createMessage(message);
-        const groupMembers = await sql.getGroupMembers(message.conversationId);
+        await createMessage(message);
+        const groupMembers = await getGroupMembers(message.conversationId);
         const users = await getUsers(pubClient);
         users.forEach((user) => {
           groupMembers.forEach((member) => {
@@ -129,7 +137,7 @@ function fileHandler(message, emitter, pubClient) {
       }
     );
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message);
   }
 }
 
@@ -149,19 +157,19 @@ function audioHandler(message, emitter, pubClient) {
         }
         const messageData = {
           ...message.message,
-          file: `${process.env.IP}/${fileName}`,
+          file: `${process.env.IP}/${fileName}`
         };
 
         const message = {
           id: message.id,
           conversationId: message.conversationId,
-          sender: await sql.getUser(message.sender),
+          sender: await getUser(message.sender),
           receiver: { username: message.conversationId },
           message: messageData,
-          time: message.time,
+          time: message.time
         };
-        await sql.createMessage(message);
-        const groupMembers = await sql.getGroupMembers(message.conversationId);
+        await createMessage(message);
+        const groupMembers = await getGroupMembers(message.conversationId);
         const users = await getUsers(pubClient);
         users.forEach((user) => {
           groupMembers.forEach((member) => {
@@ -173,7 +181,7 @@ function audioHandler(message, emitter, pubClient) {
       }
     );
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message);
   }
 }
 
@@ -182,13 +190,13 @@ async function textHandler(messageData, emitter, pubClient) {
     const message = {
       id: messageData.id,
       conversationId: messageData.conversationId,
-      sender: await sql.getUser(messageData.sender),
+      sender: await getUser(messageData.sender),
       receiver: { username: messageData.conversationId },
       message: messageData.message,
-      time: messageData.time,
+      time: messageData.time
     };
-    await sql.createMessage(message);
-    const groupMembers = await sql.getGroupMembers(message.conversationId);
+    await createMessage(message);
+    const groupMembers = await getGroupMembers(message.conversationId);
     const users = await getUsers(pubClient);
     users.forEach((user) => {
       groupMembers.forEach((member) => {
@@ -198,6 +206,6 @@ async function textHandler(messageData, emitter, pubClient) {
       });
     });
   } catch (err) {
-    logger.error(err);
+    logger.error(err.message);
   }
 }

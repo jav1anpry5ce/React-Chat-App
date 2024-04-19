@@ -32,7 +32,7 @@ export default function Login() {
           username: res.data.username,
           name: res.data.name,
           image: res.data.image,
-          token: res.data.token,
+          token: res.data.token
         };
         storeData("user", user)
           .then(() => {

@@ -12,11 +12,11 @@ module.exports = function (socket, emitter, pubClient) {
           from: data.from,
           type: data.type,
           name: data.name,
-          image: data.image,
+          image: data.image
         });
       });
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
     }
   });
 
@@ -40,7 +40,7 @@ module.exports = function (socket, emitter, pubClient) {
         emitter.to(user.id).emit("endCall");
       });
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
     }
   });
 
@@ -52,7 +52,7 @@ module.exports = function (socket, emitter, pubClient) {
         emitter.to(user.id).emit("ignoreCall");
       });
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
     }
   });
 
@@ -64,7 +64,7 @@ module.exports = function (socket, emitter, pubClient) {
         emitter.to(user.id).emit("busy");
       });
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
     }
   });
 };

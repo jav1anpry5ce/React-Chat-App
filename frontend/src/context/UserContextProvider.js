@@ -9,13 +9,13 @@ export const UserProvider = ({ children }) => {
   const getUpdateUser = async (user) => {
     const uUser = await axios.get(`https://api.chatapp.home/api/user`, {
       headers: {
-        Authorization: `${user.token}`,
-      },
+        Authorization: `${user.token}`
+      }
     });
     if (!uUser) return;
     const updatedUser = {
       ...uUser.data,
-      token: user.token,
+      token: user.token
     };
     setUser(updatedUser);
     localStorage.setItem("user", JSON.stringify(updatedUser));
@@ -25,7 +25,7 @@ export const UserProvider = ({ children }) => {
     const oldUser = JSON.parse(localStorage.getItem("user"));
     const updatedUser = {
       ...user,
-      token: oldUser.token,
+      token: oldUser.token
     };
     localStorage.setItem("user", JSON.stringify(updatedUser));
     setUser(updatedUser);

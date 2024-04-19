@@ -1,7 +1,7 @@
 const fileHandler = require("./fileHandler");
 const audioHandler = require("./audioHandler");
 const textHandler = require("./textHandler");
-const sql = require("../sql");
+const { deleteMessage } = require("../sql/messageSql");
 const getUsers = require("../getUsers");
 const logger = require("../config/logger.config");
 
@@ -11,7 +11,7 @@ module.exports = function (socket, emitter, pubClient) {
   socket.on("chat", async (data) => {
     const message = {
       id,
-      ...data,
+      ...data
     };
 
     try {
@@ -23,7 +23,7 @@ module.exports = function (socket, emitter, pubClient) {
         textHandler(message, emitter, pubClient);
       }
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
     }
   });
 
@@ -32,16 +32,16 @@ module.exports = function (socket, emitter, pubClient) {
     async ({ messageID, conversationID, username }) => {
       const users = await getUsers(pubClient);
       try {
-        const message = await sql.deleteMessage(messageID);
+        const message = await deleteMessage(messageID);
         users.forEach((user) => {
           emitter.to(user.id).emit("messageDeleted", {
             messageID,
             conversationID,
-            message,
+            message
           });
         });
       } catch (err) {
-        logger.error(err);
+        logger.error(err.message);
         const user = users.filter((user) => user.username === username);
         user.forEach((user) => {
           emitter.to(user.id).emit("error", { message: err });

@@ -1,5 +1,9 @@
 const userConnectHandler = require("./userConnectHandler");
-const sql = require("../sql");
+const { getUser } = require("../sql/userSql");
+const {
+  getConversation,
+  createConversation
+} = require("../sql/conversationSql");
 const shortid = require("shortid");
 const getUsers = require("../getUsers");
 const setUsers = require("../setUsers");
@@ -11,11 +15,11 @@ module.exports = function (socket, emitter, pubClient) {
       if (!userData) return;
       const data = {
         id: socket.id,
-        ...userData,
+        ...userData
       };
       userConnectHandler(emitter, data, pubClient);
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
     }
   });
 
@@ -29,7 +33,7 @@ module.exports = function (socket, emitter, pubClient) {
         emitter.to(socket.id).emit("online", { username, online: false });
       }
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
     }
   });
 
@@ -39,15 +43,15 @@ module.exports = function (socket, emitter, pubClient) {
     user.forEach((user) => {
       emitter.to(user.id).emit("usertyping", {
         user: data.username,
-        typing: data.typing,
+        typing: data.typing
       });
     });
   });
 
   socket.on("addingUser", async ({ userToAdd, user: username }) => {
     try {
-      const conversation = await sql.getConversation({
-        users: [userToAdd, username],
+      const conversation = await getConversation({
+        users: [userToAdd, username]
       });
       if (conversation) {
         emitter
@@ -55,15 +59,15 @@ module.exports = function (socket, emitter, pubClient) {
           .emit("error", { message: "Conversation already exists" });
       } else if (userToAdd === username) {
         emitter.to(socket.id).emit("error", {
-          message: "You can't add yourself to a conversation",
+          message: "You can't add yourself to a conversation"
         });
       } else {
-        const user = await sql.getUser(userToAdd);
+        const user = await getUser(userToAdd);
         const conversation = {
           id: shortid.generate(),
-          users: [userToAdd, username],
+          users: [userToAdd, username]
         };
-        await sql.createConversation(conversation);
+        await createConversation(conversation);
         const chat = {
           id: conversation.id,
           name: user.name,
@@ -71,7 +75,7 @@ module.exports = function (socket, emitter, pubClient) {
           username: user.username,
           messages: [],
           chatType: "private",
-          unread: 0,
+          unread: 0
         };
         emitter.to(socket.id).emit("userAdded", chat);
         const users = await getUsers(pubClient);
@@ -81,7 +85,7 @@ module.exports = function (socket, emitter, pubClient) {
         });
       }
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
       emitter.to(socket.id).emit("notFound");
     }
   });
@@ -93,7 +97,7 @@ module.exports = function (socket, emitter, pubClient) {
       const list = users.filter((user) => user.id !== socket.id);
       await setUsers(list, pubClient);
     } catch (err) {
-      logger.error(err);
+      logger.error(err.message);
     }
   });
 };
