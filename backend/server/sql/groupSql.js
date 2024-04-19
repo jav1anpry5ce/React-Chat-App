@@ -1,10 +1,25 @@
 const logger = require("../config/logger.config");
 const { getUser } = require("./userSql");
 const { calculateNextPageUrl } = require("./extraSql");
-const { getMessage } = require("./conversationSql");
 const getConnection = require("./sqlConnection");
 
 const con = getConnection();
+
+const getMessage = async (id) => {
+  try {
+    const sql = `SELECT * FROM message WHERE id = ?`;
+    const result = await new Promise((resolve, reject) => {
+      con.query(sql, [id], (err, result) => {
+        if (err) reject(err);
+        else resolve(result[0]);
+      });
+    });
+    return result;
+  } catch (err) {
+    logger.error(err.message);
+    throw err;
+  }
+};
 
 const createGroupChat = async (data) => {
   try {
