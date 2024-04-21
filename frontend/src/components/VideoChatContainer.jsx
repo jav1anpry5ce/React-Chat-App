@@ -9,31 +9,42 @@ import {
 } from "react-icons/bs";
 import { MdScreenShare } from "react-icons/md";
 import { motion } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 
 export default function VideoChatContainer() {
   const {
-    userStream,
-    myVideo,
+    callerStream,
     onPlaying,
     myMicStatus,
     muteUnmute,
     myVideoStatus,
     updateVideo,
     handleScreenSharing,
-    leaveCall
+    leaveCall,
+    stream
   } = useCallContext();
   const { socket } = useMainContext();
   const dragRef = useRef(null);
+  const playerRef = useRef(null);
+  const callerRef = useRef(null);
+
+  useEffect(() => {
+    if (stream) {
+      playerRef.current.srcObject = stream;
+    }
+    if (callerStream) {
+      callerRef.current.srcObject = callerStream;
+    }
+  }, [stream, callerStream]);
 
   return (
     <div className="m-auto h-full w-full lg:h-[65%] lg:w-[50%]">
       <div className="relative h-full w-full overflow-hidden">
         <div className="absolute inset-0 z-10 overflow-hidden">
           <video
-            ref={userStream}
+            ref={callerRef}
             autoPlay
-            onTimeUpdate={onPlaying}
+            onTimeUpdate={(e) => onPlaying(e.target.currentTime)}
             playsInline
             className="h-full w-full bg-black"
           />
@@ -50,7 +61,7 @@ export default function VideoChatContainer() {
           className="absolute left-2 top-2 z-20 h-[30%] w-[30%] cursor-grab overflow-hidden rounded lg:bottom-2 lg:right-2"
         >
           <video
-            ref={myVideo}
+            ref={playerRef}
             autoPlay
             muted
             className="h-full w-full bg-black/90"

@@ -7,6 +7,8 @@ export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
 
   const getUpdateUser = async (user) => {
+    if (!user?.token) return;
+
     const uUser = await axios.get(`https://api.chatapp.home/api/user`, {
       headers: {
         Authorization: `${user.token}`

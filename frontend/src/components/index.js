@@ -7,3 +7,4 @@ export { default as CreateGroupInterface } from "./CreateGroupInterface";
 export { default as ViewGroupInfo } from "./ViewGroupInfo";
 export { default as Notifications } from "./Notifications";
 export { default as VideoChatContainer } from "./VideoChatContainer";
+export { default as VideoRinging } from "./VideoRinging";

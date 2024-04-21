@@ -8,22 +8,31 @@ import {
   BsMicFill
 } from "react-icons/bs";
 import { MdScreenShare } from "react-icons/md";
+import {  useEffect, useRef } from "react";
 
 export default function VideoRinging() {
   const {
-    myVideo,
     myMicStatus,
     muteUnmute,
     myVideoStatus,
     updateVideo,
     handleScreenSharing,
-    leaveCall
+    leaveCall,
+    stream
   } = useCallContext();
   const { socket } = useMainContext();
+  const playerRef = useRef(null);
+
+  useEffect(() => {
+    if (stream) {
+      playerRef.current.srcObject = stream;
+    }
+  }, [stream]);
+
   return (
     <div className="relative">
       <video
-        ref={myVideo}
+        ref={playerRef}
         autoPlay
         muted
         className="aspect-auto h-auto w-[40rem] rounded"

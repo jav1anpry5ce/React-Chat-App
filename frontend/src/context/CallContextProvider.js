@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useRef, useEffect } from "react";
+import { createContext, useContext, useState, useRef } from "react";
 import { useUserContext } from "./UserContextProvider";
 import { useChatContext } from "./ChatContextProvider";
 import Peer from "simple-peer";
@@ -19,11 +19,10 @@ export const CallProvider = ({ children }) => {
   const [type, setType] = useState("");
   const [currentTime, setCurrentTime] = useState(0);
   const [hide, setHide] = useState(false);
+  const [callerStream, setCallerStream] = useState();
 
-  const myVideo = useRef();
-  const userStream = useRef();
-  const connectionRef = useRef();
-  const screenTrackRef = useRef();
+  const connectionRef = useRef(null);
+  const screenTrackRef = useRef(null);
 
   const callUser = async (data, socket) => {
     const stream = await getUserMedia(data);
@@ -55,7 +54,7 @@ export const CallProvider = ({ children }) => {
     });
 
     peer.on("stream", (stream) => {
-      userStream.current.srcObject = stream;
+      setCallerStream(stream);
     });
 
     peer.signal(caller.signal);
@@ -125,12 +124,12 @@ export const CallProvider = ({ children }) => {
           );
 
           // Update UI to display the previous video stream
-          myVideo.current.srcObject = stream;
+          setStream(stream);
           setScreenShare(false);
         };
 
         // Update UI to display the screen stream
-        myVideo.current.srcObject = currentStream;
+        setStream(currentStream);
         screenTrackRef.current = screenTrack;
         setScreenShare(true);
       } else {
@@ -182,7 +181,7 @@ export const CallProvider = ({ children }) => {
     });
 
     peer.on("stream", (stream) => {
-      userStream.current.srcObject = stream;
+      setCallerStream(stream);
     });
 
     connectionRef.current = peer;
@@ -190,44 +189,36 @@ export const CallProvider = ({ children }) => {
 
   const resetCall = () => {
     if (stream) stream.getTracks().forEach((track) => track.stop());
+    if (callerStream) callerStream.getTracks().forEach((track) => track.stop());
 
-    setCalling(null);
     setReceivingCall(false);
     setCallAccepted(false);
     setCaller(null);
-    setStream(null);
+    setCalling(null);
     setMyMicStatus(true);
     setMyVideoStatus(true);
     setScreenShare(false);
     setType("");
-    setCurrentTime(0);
     setHide(false);
+    setStream(null);
+    setCallerStream(null);
+    setCurrentTime(0);
 
     screenTrackRef.current = null;
-    myVideo.current = null;
-    userStream.current = null;
 
     if (connectionRef.current) {
       window.location.reload();
     }
   };
 
-  const onPlaying = () => {
-    setCurrentTime(userStream.current.currentTime);
+  const onPlaying = (currentTime) => {
+    setCurrentTime(currentTime);
   };
 
   const onCallAccepted = (signal) => {
     setCallAccepted(true);
     if (connectionRef.current) connectionRef.current.signal(signal);
   };
-
-  useEffect(() => {
-    if ((calling || callAccepted) && stream) {
-      if (type === "video" && myVideo && myVideo.current) {
-        myVideo.current.srcObject = stream;
-      }
-    }
-  }, [calling, callAccepted, stream, type]);
 
   return (
     <CallContext.Provider
@@ -238,12 +229,11 @@ export const CallProvider = ({ children }) => {
         callAccepted,
         calling,
         caller,
-        userStream,
+        callerStream,
         leaveCall,
         ignoreCall,
         muteUnmute,
         myMicStatus,
-        myVideo,
         type,
         updateVideo,
         myVideoStatus,
@@ -256,7 +246,8 @@ export const CallProvider = ({ children }) => {
         onCallAccepted,
         screenTrackRef,
         hide,
-        setHide
+        setHide,
+        stream
       }}
     >
       {children}

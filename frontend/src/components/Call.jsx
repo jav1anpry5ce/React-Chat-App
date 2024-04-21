@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from "react";
+import React, { Fragment, useState, useEffect, useRef } from "react";
 import { useMainContext } from "../context/MainContextProvider";
 import { Dialog, Transition } from "@headlessui/react";
 import { ImPhoneHangUp } from "react-icons/im";
@@ -30,34 +30,43 @@ export default function Call() {
     onPlaying,
     currentTime,
     type,
-    userStream,
+    callerStream,
     hide,
     setHide
   } = useCallContext();
   const [show, setShow] = useState(false);
-  const [audio] = useState(new Audio(ring));
+  const [ringing] = useState(new Audio(ring));
+
+  const callerRef = useRef(null);
 
   useEffect(() => {
     if (calling) {
       setShow(true);
-    } else if (receivingCall) {
+    } else if (receivingCall && !callAccepted) {
       setShow(true);
-      audio.currentTime = 0;
-      audio.volume = 0.045;
-      audio.loop = true;
-      audio.play();
+      ringing.currentTime = 0;
+      ringing.volume = 0.045;
+      ringing.loop = true;
+      ringing.play();
     } else {
       setShow(false);
+      ringing.pause();
     }
-    if (callAccepted) audio.pause();
-    if (!receivingCall) audio.pause();
-  }, [receivingCall, calling, audio, callAccepted]);
+    if (callAccepted) ringing.pause();
+    // eslint-disable-next-line
+  }, [receivingCall, calling, callAccepted]);
 
   useEffect(() => {
     if (callAccepted || calling || receivingCall) {
       setShow(!hide);
     }
   }, [hide, callAccepted, calling, receivingCall]);
+
+  useEffect(() => {
+    if (callerStream) {
+      if (callerRef.current) callerRef.current.srcObject = callerStream;
+    }
+  }, [callerStream]);
 
   return (
     <Transition.Root show={show} as={Fragment}>
@@ -145,7 +154,11 @@ export default function Call() {
               <div className="inline-block h-[30rem] w-full transform overflow-hidden rounded-lg bg-gray-900 text-left align-bottom text-white shadow-xl transition-all sm:my-8 sm:max-w-sm sm:align-middle">
                 <div className="flex h-full flex-col items-center bg-gray-900 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                   {callAccepted && (
-                    <audio ref={userStream} autoPlay onTimeUpdate={onPlaying} />
+                    <audio
+                      ref={callerRef}
+                      autoPlay
+                      onTimeUpdate={(e) => onPlaying(e.target.currentTime)}
+                    />
                   )}
                   <div className="flex flex-col items-center space-y-1">
                     <p className="text-center text-lg font-semibold">
