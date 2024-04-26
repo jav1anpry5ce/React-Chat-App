@@ -14,6 +14,7 @@ const router = express.Router();
 const shortid = require("shortid");
 const IP = process.env.IP;
 const logger = require("./config/logger.config");
+const sharp = require("sharp");
 
 router.post("/signup", (req, res) => {
   const saltRounds = 10;
@@ -124,32 +125,67 @@ router.post("/user/update", async (req, res) => {
     });
 });
 
+// router.post("/upload", async (req, res) => {
+//   const { image } = req.files;
+//   const token = req.headers.authorization;
+//   if (!token) return res.status(401).send({ message: "unauthorized" });
+//   if (!image) {
+//     res.status(400).send({ message: "Something went wrong!" });
+//   }
+//   validateToken(token)
+//     .then(() => {
+//       const filename = shortid.generate() + ".jpg";
+//       const image_url = `${IP}/${filename}`;
+//       image.mv("./files/" + filename, (err) => {
+//         if (err) return res.status(500).send({ message: err.message });
+//         uploadPhoto(token, image_url)
+//           .then((user) => {
+//             res.status(200).send(user);
+//           })
+//           .catch((err) => {
+//             res.status(500).send({ message: err.message });
+//           });
+//       });
+//     })
+//     .catch((err) => {
+//       logger.error(err.message);
+//       res.status(500).send({ message: "unauthorized" });
+//     });
+// });
+
 router.post("/upload", async (req, res) => {
   const { image } = req.files;
   const token = req.headers.authorization;
+
   if (!token) return res.status(401).send({ message: "unauthorized" });
-  if (!image) {
-    res.status(400).send({ message: "Something went wrong!" });
-  }
-  validateToken(token)
-    .then(() => {
-      const filename = shortid.generate() + ".jpg";
-      const image_url = `${IP}/${filename}`;
-      image.mv("./files/" + filename, (err) => {
-        if (err) return res.status(500).send({ message: err.message });
-        uploadPhoto(token, image_url)
-          .then((user) => {
-            res.status(200).send(user);
-          })
-          .catch((err) => {
-            res.status(500).send({ message: err.message });
-          });
+  if (!image) return res.status(400).send({ message: "Something went wrong!" });
+
+  try {
+    await validateToken(token);
+
+    const filename = shortid.generate() + ".jpg";
+    const filePath = "./files/" + filename;
+    const image_url = `${IP}/${filename}`;
+
+    // Use Sharp to reduce image quality before saving
+    sharp(image.data)
+      .jpeg({ quality: 30 })
+      .toFile(filePath, async (err, info) => {
+        if (err) {
+          return res.status(500).send({ message: err.message });
+        }
+
+        try {
+          await uploadPhoto(token, image_url);
+          res.status(200).send({ message: "Image uploaded successfully!" });
+        } catch (error) {
+          res.status(500).send({ message: error.message });
+        }
       });
-    })
-    .catch((err) => {
-      logger.error(err.message);
-      res.status(500).send({ message: "unauthorized" });
-    });
+  } catch (error) {
+    logger.error(error.message);
+    res.status(500).send({ message: "unauthorized" });
+  }
 });
 
 router.get("/messages", async (req, res) => {

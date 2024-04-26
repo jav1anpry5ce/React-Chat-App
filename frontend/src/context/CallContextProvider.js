@@ -60,6 +60,7 @@ export const CallProvider = ({ children }) => {
     peer.signal(caller.signal);
     setCallAccepted(true);
     connectionRef.current = peer;
+    startTimer();
   };
 
   const ignoreCall = (user, socket) => {
@@ -212,12 +213,20 @@ export const CallProvider = ({ children }) => {
   };
 
   const onPlaying = (currentTime) => {
-    setCurrentTime(currentTime);
+    // setCurrentTime(currentTime);
   };
 
   const onCallAccepted = (signal) => {
     setCallAccepted(true);
     if (connectionRef.current) connectionRef.current.signal(signal);
+    startTimer();
+  };
+
+  const startTimer = () => {
+    const timer = setInterval(() => {
+      setCurrentTime((prevTime) => prevTime + 1);
+    }, 1000);
+    return timer;
   };
 
   return (
