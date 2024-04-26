@@ -27,7 +27,6 @@ export default function Call() {
     ignoreCall,
     myMicStatus,
     muteUnmute,
-    onPlaying,
     currentTime,
     type,
     callerStream,
@@ -153,13 +152,7 @@ export default function Call() {
             ) : (
               <div className="inline-block h-[30rem] w-full transform overflow-hidden rounded-lg bg-gray-900 text-left align-bottom text-white shadow-xl transition-all sm:my-8 sm:max-w-sm sm:align-middle">
                 <div className="flex h-full flex-col items-center bg-gray-900 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                  {callAccepted && (
-                    <audio
-                      ref={callerRef}
-                      autoPlay
-                      onTimeUpdate={(e) => onPlaying(e.target.currentTime)}
-                    />
-                  )}
+                  {callAccepted && <audio ref={callerRef} autoPlay />}
                   <div className="flex flex-col items-center space-y-1">
                     <p className="text-center text-lg font-semibold">
                       {calling?.userToCallName || caller?.name}

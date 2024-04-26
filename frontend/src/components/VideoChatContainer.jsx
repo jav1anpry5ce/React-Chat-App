@@ -14,7 +14,6 @@ import { useRef, useEffect } from "react";
 export default function VideoChatContainer() {
   const {
     callerStream,
-    onPlaying,
     myMicStatus,
     muteUnmute,
     myVideoStatus,
@@ -44,7 +43,6 @@ export default function VideoChatContainer() {
           <video
             ref={callerRef}
             autoPlay
-            onTimeUpdate={(e) => onPlaying(e.target.currentTime)}
             playsInline
             className="h-full w-full bg-black"
           />

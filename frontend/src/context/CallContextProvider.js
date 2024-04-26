@@ -212,10 +212,6 @@ export const CallProvider = ({ children }) => {
     }
   };
 
-  const onPlaying = (currentTime) => {
-    // setCurrentTime(currentTime);
-  };
-
   const onCallAccepted = (signal) => {
     setCallAccepted(true);
     if (connectionRef.current) connectionRef.current.signal(signal);
@@ -250,7 +246,6 @@ export const CallProvider = ({ children }) => {
         screenShare,
         setupIncomingCall,
         resetCall,
-        onPlaying,
         currentTime,
         onCallAccepted,
         screenTrackRef,
