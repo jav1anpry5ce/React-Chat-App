@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { io } from "socket.io-client";
+import { Manager } from "socket.io-client";
 import noti from "../assets/noti.wav";
 import { useUserContext } from "./UserContextProvider";
 import { useChatContext } from "./ChatContextProvider";
@@ -8,9 +8,14 @@ import { useCallContext } from "./CallContextProvider";
 
 const MainContext = createContext();
 
-const socket = io(`https://api.chatapp.home`, {
-  transports: ["websocket"]
+const manager = new Manager(`https://api.chatapp.home`, {
+  transports: ["websocket"],
+  reconnection: true,
+  reconnectionAttempts: 10,
+  reconnectionDelay: 10000
 });
+
+const socket = manager.socket("/");
 
 export const MainProvider = ({ children }) => {
   const { user, handleUserData, clearUser } = useUserContext();
