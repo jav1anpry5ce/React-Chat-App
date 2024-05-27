@@ -9,7 +9,7 @@ export const UserProvider = ({ children }) => {
   const getUpdateUser = async (user) => {
     if (!user?.token) return;
 
-    const uUser = await axios.get(`https://api.chatapp.home/api/user`, {
+    const uUser = await axios.get(`${process.env.REACT_APP_API_URI}/api/user`, {
       headers: {
         Authorization: `${user.token}`
       }

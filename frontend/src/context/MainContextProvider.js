@@ -8,7 +8,7 @@ import { useCallContext } from "./CallContextProvider";
 
 const MainContext = createContext();
 
-const manager = new Manager(`https://api.chatapp.home`, {
+const manager = new Manager(`${process.env.REACT_APP_API_URI}`, {
   transports: ["websocket"],
   reconnection: true,
   reconnectionAttempts: 10,
