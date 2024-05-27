@@ -3,7 +3,7 @@ services:
     build:
       context: ./frontend
       args:
-        - REACT_APP_API_URI: "https://api.chatapp.javaughnpryce.site/"
+        REACT_APP_API_URI: "https://api.chatapp.javaughnpryce.site/"
     ports:
       - "9094:80"
     restart: unless-stopped
