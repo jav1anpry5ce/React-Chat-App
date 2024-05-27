@@ -55,7 +55,7 @@
   "devDependencies": {
     "@types/simple-peer": "^9.11.8",
     "autoprefixer": "^10.4.19",
-    "daisyui": "^3.9.4",
+    "daisyui": "^4.10.2",
     "postcss": "^8.4.38",
     "prettier": "^2.8.8",
     "prettier-plugin-tailwindcss": "^0.1.13",

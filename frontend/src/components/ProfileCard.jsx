@@ -22,9 +22,9 @@ export default function ProfileCard() {
         >
           <button
             type="button"
-            className="btn-ghost btn-sm btn-circle btn absolute right-2 top-2"
+            className="btn btn-circle btn-ghost btn-sm absolute right-2 top-2"
             onClick={() => {
-              window.add_friend.close();
+              document.getElementById("add_friend").close();
               formRef.current.reset();
             }}
           >
@@ -40,7 +40,7 @@ export default function ProfileCard() {
             <input
               required
               name="username"
-              className="input-bordered input w-full"
+              className="input input-bordered w-full"
             />
           </div>
           <button type="submit" className="btn mt-3 w-full">
@@ -63,7 +63,7 @@ export default function ProfileCard() {
         <div className="flex flex-col gap-2">
           <button
             className="rounded bg-gradient-to-r from-sky-500 to-indigo-500 p-2 font-bold uppercase hover:from-indigo-500 hover:to-sky-500"
-            onClick={() => window.add_friend.showModal()}
+            onClick={() => document.getElementById("add_friend").showModal()}
           >
             <p className="font-sans text-[11px]">Add a friend</p>
           </button>

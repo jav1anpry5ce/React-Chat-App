@@ -1,0 +1,21 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - REACT_APP_API_URI: "https://api.chatapp.javaughnpryce.site/"
+    ports:
+      - "9094:80"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend/server
+    ports:
+      - "9093:5000"
+    volumes:
+      - ./backend/server:/server/files
+      - ./backend/server/.env:/server/logs
+    env_file:
+      - .env
+    restart: unless-stopped
