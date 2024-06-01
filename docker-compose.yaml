@@ -10,12 +10,15 @@ services:
 
   backend:
     build:
-      context: ./backend/server
+      context: ./server
     ports:
       - "9093:5000"
     volumes:
-      - ./backend/server:/server/files
-      - ./backend/server/.env:/server/logs
+      - server:/server/files
+      - server:/server/logs
     env_file:
       - .env
     restart: unless-stopped
+
+volumes:
+  server:
