@@ -8,39 +8,29 @@ import { useChatContext } from "../context/ChatContextProvider";
 
 export default function ChatItem({ chat }) {
   const { setShow, removeUser } = useMainContext();
-  const { setChatting, chatting, setUnreadToZero } = useChatContext();
-  const [lastChat, setLastChat] = useState("");
+  const { setChatting } = useChatContext();
+  const [lastChat, setLastChat] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const lastChat = chat?.messages?.at(-1);
-    if (lastChat?.message?.wasUnsent) setLastChat("This message was unsent");
-    else if (lastChat?.message?.type === "text") {
+    if (lastChat?.message?.wasUnsent) setLastChat('This message was unsent');
+    else if (lastChat?.message?.type === 'text') {
       if (lastChat?.message?.file) {
         setLastChat(lastChat?.message?.name);
       } else {
         setLastChat(lastChat?.message?.text);
       }
-    } else if (lastChat?.message?.type === "audio") {
-      setLastChat("voice memo");
-    } else if (lastChat?.message?.type === "image") {
-      setLastChat("photo");
-    } else if (lastChat?.message?.type === "application") {
+    } else if (lastChat?.message?.type === 'audio') {
+      setLastChat('voice memo');
+    } else if (lastChat?.message?.type === 'image') {
+      setLastChat('photo');
+    } else if (lastChat?.message?.type === 'application') {
       setLastChat(lastChat?.message?.name);
-    } else if (lastChat?.message?.type === "video") {
-      setLastChat("video");
+    } else if (lastChat?.message?.type === 'video') {
+      setLastChat('video');
     }
   }, [chat.lastMessage, chat.messages]);
-
-  useEffect(() => {
-    if (chatting) {
-      if (chatting?.id === chat?.id) {
-        chat.unread = 0;
-        setUnreadToZero(chat?.id);
-      }
-    }
-    // eslint-disable-next-line
-  }, [chatting]);
 
   const remove = (chatId, name) => {
     const sure = window.confirm(`Are you sure you want to remove ${name}?`);
@@ -91,20 +81,20 @@ export default function ChatItem({ chat }) {
         <div className="truncate">
           <h5 className="truncate font-semibold text-white">{chat?.name}</h5>
           <div className="truncate text-sm text-white">
-            {lastChat === "photo" ? (
+            {lastChat === 'photo' ? (
               <div className="flex items-center gap-1">
-                {chat.chatType === "group" &&
+                {chat.chatType === 'group' &&
                   chat?.messages.length > 0 &&
-                  "~ " + chat?.messages.at(-1).sender.username + ": "}
+                  '~ ' + chat?.messages.at(-1).sender.username + ': '}
                 <MdInsertPhoto fontSize={20} />
                 <p>Photo</p>
               </div>
             ) : (
               <p className="truncate">
-                {chat.chatType === "group" &&
+                {chat.chatType === 'group' &&
                   chat?.messages.length > 0 &&
-                  "~ " + chat?.messages.at(-1)?.sender.username + ": "}
-                {""}
+                  '~ ' + chat?.messages.at(-1)?.sender.username + ': '}
+                {''}
                 {lastChat}
               </p>
             )}

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useUserContext } from "./UserContextProvider";
 import axios from "axios";
+import { saveToDB, readAllFromDB, readFromDB, clearDB } from '../utils/db';
 
 const ChatContext = createContext();
 
@@ -10,78 +11,46 @@ export const ChatProvider = ({ children }) => {
   const [chatting, setChatting] = useState();
   //   const [conversationId, setConversationId] = useState();
 
-  const swapChat = (chat) => {
+  const setUnread = async (chat) => {
     try {
-      let initialChats = chats;
-
-      // If there are no initial chats, resolve with an empty array
-      if (!initialChats) return;
-
-      // Find the conversation in the chats array
-      const conversationIndex = initialChats.findIndex(
-        (item) => item.id === chat.conversationId
-      );
-
-      // If the conversation doesn't exist in the chats array, resolve with the initial chats
-      if (conversationIndex === -1) return;
-
-      // Remove the conversation from its current position and add it to the beginning of the array
-      const conversation = initialChats.splice(conversationIndex, 1)[0];
-      initialChats.unshift(conversation);
-
-      // Update the local storage with the modified chats array
-      localStorage.setItem("chats", JSON.stringify(initialChats));
-
-      // Update unread counts and resolve with the updated chats
-      setChats([...initialChats]);
-      setUnread(chat);
-    } catch (error) {
-      console.error("Error swapping chats:", error);
-    }
-  };
-
-  const setUnread = (chat) => {
-    try {
-      const existing_chat = chats.find(
-        (existing_chat) => existing_chat.id === chat.conversationId
-      );
-      if (!existing_chat) return;
+      const existingChat = await readFromDB(chat.conversationId);
+      if (!existingChat) return;
 
       if (
         chat.sender.username === user.username ||
-        chatting?.id === existing_chat.id
-      ) {
-        // If the current user sent the message or they are chatting in the same conversation, do not increment unread count
-        setChats([...chats]);
+        chatting?.id === existingChat.id
+      )
         return;
-      }
 
-      if (existing_chat.unread) {
-        existing_chat.unread += 1;
+      if (existingChat.unread) {
+        existingChat.unread += 1;
       } else {
-        existing_chat.unread = 1;
+        existingChat.unread = 1;
       }
 
-      localStorage.setItem("chats", JSON.stringify([...chats]));
-      setChats([...chats]);
+      await saveToDB(existingChat);
+      const chats = await readAllFromDB();
+      setChats(chats);
     } catch (error) {
-      console.error("Error setting unread count:", error);
+      console.error('Error setting unread count:', error);
     }
   };
 
-  const addMessageToChat = (message, socket) => {
-    const chat = chats.find((chat) => chat.id === message.conversationId);
-    if (!chat) {
-      socket.emit("getChatInfo", {
+  const addMessageToChat = async (message, socket) => {
+    const chatFromDB = await readFromDB(message.conversationId);
+    if (!chatFromDB) {
+      socket.emit('getChatInfo', {
         chatId: message.conversationId,
         username: user.username
       });
       return;
     }
-    chat.messages.push(message);
-    chat.lastMessage = message.message;
-    localStorage.setItem("chats", JSON.stringify([...chats]));
-    setChats([...chats]);
+    const newChat = { ...chatFromDB };
+    newChat.messages.push(message);
+    newChat.lastMessage = message.message;
+    await saveToDB(newChat);
+    const chats = await readAllFromDB();
+    setChats(chats);
   };
 
   const fetchMoreMessages = (nextPageUrl) => {
@@ -98,129 +67,125 @@ export const ChatProvider = ({ children }) => {
     });
   };
 
-  const updateChats = (newChats) => {
+  const updateChats = async (newChats) => {
     try {
-      if (chats.length === 0) {
-        setChats(newChats);
-        localStorage.setItem("chats", JSON.stringify(newChats));
+      const existingChats = await readAllFromDB();
+      if (existingChats.length === 0) {
+        newChats.forEach(async (chat) => {
+          await saveToDB(chat);
+        });
+        const chats = await readAllFromDB();
+        setChats(chats);
         return;
       }
 
-      newChats.forEach((chat) => {
-        const existingChatIndex = chats.findIndex((c) => c.id === chat.id);
-        if (existingChatIndex !== -1) {
-          const existingChat = chats[existingChatIndex];
-          existingChat.unread +=
-            chat.messages.length - existingChat.messages.length;
-          Object.assign(existingChat, chat);
-        } else {
-          chats.push(chat);
+      newChats.forEach(async (chat) => {
+        const existingChat = await readFromDB(chat.id);
+        if (!existingChat) {
+          await saveToDB(chat);
+          return;
         }
+        existingChat.unread +=
+          existingChat.messages.length - chat.messages.length;
+        existingChat.messages = chat.messages;
+        existingChat.lastMessage = chat.lastMessage;
+        await saveToDB(existingChat);
       });
-
-      localStorage.setItem("chats", JSON.stringify([...chats]));
-      setChats([...chats]);
+      const chats = await readAllFromDB();
+      setChats(chats);
     } catch (error) {
-      console.error("Error updating chats:", error);
+      console.error('Error updating chats:', error);
     }
   };
 
-  const updateGroupChat = (groupChat) => {
-    const group = chats.find((chat) => chat.id === groupChat.id);
-    if (!group) {
-      chats.push(groupChat);
-      localStorage.setItem("chats", JSON.stringify([...chats]));
-      setChats([...chats]);
+  const updateGroupChat = async (groupChat) => {
+    const chat = await readFromDB(groupChat.id);
+    if (!chat) {
+      await saveToDB(groupChat);
+      const chats = await readAllFromDB();
+      setChats(chats);
       return;
     }
-    group.name = groupChat.name;
-    group.image = groupChat.image;
-    group.members = groupChat.members;
-    localStorage.setItem("chats", JSON.stringify([...chats]));
-    setChats([...chats]);
+    chat.name = groupChat.name;
+    chat.image = groupChat.image;
+    chat.members = groupChat.members;
+    await saveToDB(chat);
+    const chats = await readAllFromDB();
+    setChats(chats);
   };
 
-  const setUnreadToZero = (conversationId) => {
+  const setUnreadToZero = async (conversationId) => {
     try {
-      const existing_chat = chats.find(
-        (existing_chat) => existing_chat.id === conversationId
-      );
-      if (!existing_chat) return;
-
-      existing_chat.unread = 0;
-
-      localStorage.setItem("chats", JSON.stringify([...chats]));
-      setChats([...chats]);
+      const chat = await readFromDB(conversationId);
+      if (!chat) return;
+      chat.unread = 0;
+      await saveToDB(chat);
+      const chats = await readAllFromDB();
+      setChats(chats);
     } catch (error) {
-      console.error("Error setting unread count:", error);
+      console.error('Error setting unread count:', error);
     }
   };
 
-  const updateChat = (chat) => {
-    chat.unread = 1;
-    localStorage.setItem("chats", JSON.stringify([chat, ...chats]));
-    setChats([chat, ...chats]);
+  const updateChat = async (chat) => {
+    console.log('chat', chat);
+    const existingChat = await readFromDB(chat.id);
+    if (!existingChat) return;
+    existingChat.unread = 1;
+    await saveToDB(existingChat);
+    const chats = await readAllFromDB();
+    setChats(chats);
   };
 
-  const clearChats = () => {
-    localStorage.removeItem("chats");
-    setChats([]);
+  const clearChats = async () => {
+    await clearDB();
+    const chats = await readAllFromDB();
+    setChats(chats);
     setChatting(null);
   };
 
-  const addGroupChat = (group, setCreateGroupChat, setClear) => {
-    if (!chats.find((chat) => chat.username === group.id)) {
-      const newChats = chats.concat(group);
-      setChats(newChats);
-      localStorage.setItem("chats", JSON.stringify(newChats));
+  const addGroupChat = async (group, setCreateGroupChat, setClear) => {
+    const groupChat = await readFromDB(group.id);
+    if (!groupChat) {
+      await saveToDB(group);
       setCreateGroupChat(false);
       setClear(true);
     }
   };
 
-  const addMemberToGroup = (data) => {
+  const addMemberToGroup = async (data) => {
     try {
-      const chat = chats.find((chat) => chat.id === data.id);
+      // const chat = chats.find((chat) => chat.id === data.id);
+      const chat = await readFromDB(data.id);
 
       // If the chat does not exist, it means it's a new chat, so add it to the chats array
       if (!chat) {
-        chats.push(data);
+        await saveToDB(data);
       } else {
         // Update the members of the existing chat
         chat.members = data.members;
+        saveToDB(chat);
       }
 
-      // Update the local storage with the modified chats array
-      localStorage.setItem("chats", JSON.stringify([...chats]));
-
-      // Update the state with the modified chats array
-      setChats([...chats]);
+      const chats = await readAllFromDB();
+      setChats(chats);
     } catch (error) {
-      console.error("Error handling group member addition:", error);
+      console.error('Error handling group member addition:', error);
     }
   };
 
   useEffect(() => {
-    const chats = JSON.parse(localStorage.getItem("chats"));
-    if (chats) {
+    readAllFromDB().then((chats) => {
       setChats(chats);
-      return;
-    } else {
-      setChats([]);
-      localStorage.setItem("chats", JSON.stringify([]));
-    }
+    });
   }, []);
-
-  useEffect(() => {
-    if (!chats) localStorage.setItem("chats", JSON.stringify([]));
-  }, [chats]);
 
   return (
     <ChatContext.Provider
       value={{
         chats,
         setChats,
-        swapChat,
+        setUnread,
         chatting,
         setChatting,
         fetchMoreMessages,
