@@ -37,9 +37,7 @@ export const ChatProvider = ({ children }) => {
   };
 
   const addMessageToChat = async (message, socket) => {
-    console.log('addMessageToChat', message);
     const chatFromDB = await readFromDB(message.conversationId);
-    console.log('chatFromDB', chatFromDB);
     if (!chatFromDB) {
       socket.emit('getChatInfo', {
         chatId: message.conversationId,
@@ -50,10 +48,8 @@ export const ChatProvider = ({ children }) => {
     const newChat = { ...chatFromDB };
     newChat.messages.push(message);
     newChat.lastMessage = message.message;
-    console.log('newChat', newChat);
     await saveToDB(newChat);
     const chats = await readAllFromDB();
-    console.log('chats', chats);
     setChats(chats);
   };
 
@@ -90,7 +86,7 @@ export const ChatProvider = ({ children }) => {
           return;
         }
         existingChat.unread +=
-          chat.messages.length - existingChat.messages.length;
+          existingChat.messages.length - chat.messages.length;
         existingChat.messages = chat.messages;
         existingChat.lastMessage = chat.lastMessage;
         await saveToDB(existingChat);
