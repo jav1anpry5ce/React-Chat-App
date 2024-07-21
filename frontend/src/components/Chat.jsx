@@ -13,18 +13,20 @@ import { motion } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
 import { useUserContext } from "../context/UserContextProvider";
 import { useCallContext } from "../context/CallContextProvider";
+import { readFromDB } from '../utils/db';
 
 function scrollToBottom() {
-  const s = document.getElementById("scroll");
+  const s = document.getElementById('scroll');
   s.scrollTo({
     top: s.scrollHeight - s.clientHeight,
-    behavior: "smooth"
+    behavior: 'smooth'
   });
 }
 
 export default function Chat() {
   const { setShow } = useMainContext();
-  const { chatting, chats, fetchMoreMessages, setChatting } = useChatContext();
+  const { chatting, chats, fetchMoreMessages, setChatting, setUnreadToZero } =
+    useChatContext();
   const { hide } = useCallContext();
   const { user } = useUserContext();
   const [searchParams] = useSearchParams();
@@ -34,24 +36,36 @@ export default function Chat() {
   const divRef = useRef(null);
 
   useEffect(() => {
-    const chat = chats?.find((chat) => chat?.id === chatting?.id);
-    if (chat) {
+    const setCurrentChat = async () => {
+      const chatId = searchParams.get('id') || chatting?.id;
+      if (!chatId) return;
+      const chat = await readFromDB(chatId);
+      if (!chat) return;
       setChat(chat);
-      if (chatting) {
-        setTimeout(() => {
-          scrollToBottom();
-        }, 100);
-      }
+      if (!chatting) setChatting(chat);
+
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+
       setTyping(false);
-    }
+    };
+    setCurrentChat();
     // eslint-disable-next-line
   }, [chats, chatting]);
 
   useEffect(() => {
+    const chatId = searchParams.get('id') || chatting?.id;
+    if (!chatId) return;
+    setUnreadToZero(chatId);
+    // eslint-disable-next-line
+  }, [chatting, searchParams]);
+
+  useEffect(() => {
     var listener;
-    const s = document.getElementById("scroll");
+    const s = document.getElementById('scroll');
     if (chatting) {
-      listener = s.addEventListener("scroll", (e) => {
+      listener = s.addEventListener('scroll', (e) => {
         const bottom =
           Math.round(e.target.scrollTop + e.target.clientHeight) >
           e.target.scrollHeight - 200;
@@ -59,19 +73,10 @@ export default function Chat() {
       });
     }
     return () => {
-      if (listener) s.removeEventListener("scroll", listener);
+      if (listener) s.removeEventListener('scroll', listener);
     };
     // eslint-disable-next-line
   }, [chatting, typing]);
-
-  useEffect(() => {
-    const chatting = searchParams.get("id");
-    const chat = chats?.find((u) => u.id === chatting);
-    if (chat) {
-      setChatting(chat);
-    }
-    // eslint-disable-next-line
-  }, [chats]);
 
   useEffect(() => {
     const container = divRef.current;
@@ -101,10 +106,10 @@ export default function Chat() {
       }
     }
 
-    container.addEventListener("scroll", handleScroll);
+    container.addEventListener('scroll', handleScroll);
 
     return () => {
-      container.removeEventListener("scroll", handleScroll);
+      container.removeEventListener('scroll', handleScroll);
     };
   }, [chat, fetchMoreMessages, divRef]);
 
@@ -112,7 +117,7 @@ export default function Chat() {
     <motion.div
       layout
       className={`h-full flex-1 bg-[url('/src/assets/background.jpg')] bg-cover bg-center ${
-        hide && "pt-5"
+        hide && 'pt-5'
       } lg:pt-0`}
     >
       <ViewImage />
@@ -120,7 +125,7 @@ export default function Chat() {
         {chatting ? (
           <ChatHead typing={typing} />
         ) : (
-          <div className="flex items-center space-x-3 bg-emerald-500/70 px-2 py-0.5 text-white backdrop-blur-md dark:bg-slate-800 md:hidden">
+          <div className="flex items-center space-x-3 bg-emerald-500/70 px-2 py-0.5 text-white backdrop-blur-md md:hidden dark:bg-slate-800">
             <AiOutlineMenuUnfold
               className="block h-8 w-8 md:hidden"
               onClick={() => setShow(true)}

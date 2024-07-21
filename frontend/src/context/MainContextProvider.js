@@ -5,24 +5,25 @@ import { useUserContext } from "./UserContextProvider";
 import { useChatContext } from "./ChatContextProvider";
 import { useMessageContext } from "./MessageContextProvider";
 import { useCallContext } from "./CallContextProvider";
+import { readAllFromDB, readFromDB, saveToDB, deleteFromDB } from '../utils/db';
 
 const MainContext = createContext();
 
 const manager = new Manager(`${process.env.REACT_APP_API_URI}`, {
-  transports: ["websocket"],
+  transports: ['websocket'],
   reconnection: true,
   reconnectionAttempts: 10,
   reconnectionDelay: 10000
 });
 
-const socket = manager.socket("/");
+const socket = manager.socket('/');
 
 export const MainProvider = ({ children }) => {
   const { user, handleUserData, clearUser } = useUserContext();
   const {
     chats,
     setChats,
-    swapChat,
+    setUnread,
     chatting,
     setChatting,
     addMessageToChat,
@@ -53,16 +54,15 @@ export const MainProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [clear, setClear] = useState(false);
 
-  const removeUser = (chatId) => {
+  const removeUser = async (chatId) => {
     if (chatting && chatting.id === chatId) setChatting(null);
-    const chats = JSON.parse(localStorage.getItem("chats"));
-    const newChats = chats.filter((chat) => chat.id !== chatId);
-    localStorage.setItem("chats", JSON.stringify(newChats));
-    setChats(newChats);
+    await deleteFromDB(chatId);
+    const chats = await readAllFromDB();
+    setChats(chats);
   };
 
   const deleteMessage = (messageID, conversationID) => {
-    socket.emit("deleteMessage", {
+    socket.emit('deleteMessage', {
       messageID,
       conversationID,
       username: user?.username
@@ -77,15 +77,15 @@ export const MainProvider = ({ children }) => {
       admin: 1
     };
     groupData.members.push(admin);
-    socket.emit("createGroup", groupData);
+    socket.emit('createGroup', groupData);
   };
 
   const addGroupMember = (data) => {
-    socket.emit("addGroupMember", data);
+    socket.emit('addGroupMember', data);
   };
 
   const changeGroup = (data) => {
-    socket.emit("changeGroup", data);
+    socket.emit('changeGroup', data);
   };
 
   const notifyUser = (data) => {
@@ -104,7 +104,7 @@ export const MainProvider = ({ children }) => {
 
     // Set up audio notification
     const audioNotification = new Audio();
-    audioNotification.src = "notification-sound.mp3";
+    audioNotification.src = 'notification-sound.mp3';
     audioNotification.volume = 0.045;
 
     // Display notification
@@ -121,10 +121,10 @@ export const MainProvider = ({ children }) => {
   };
 
   const createNotification = (data) => {
-    const chats = JSON.parse(localStorage.getItem("chats"));
+    const chats = JSON.parse(localStorage.getItem('chats'));
     const chat = chats.find((chat) => chat.id === data.conversationId);
 
-    if (chat && chat.chatType === "group") {
+    if (chat && chat.chatType === 'group') {
       return {
         id: data?.id,
         title: `New message from ${chat?.name}`,
@@ -149,94 +149,94 @@ export const MainProvider = ({ children }) => {
 
   const addUser = (userToAdd) => {
     return new Promise((resolve) => {
-      socket.emit("addingUser", { userToAdd, user: user?.username });
-      return resolve("success");
+      socket.emit('addingUser', { userToAdd, user: user?.username });
+      return resolve('success');
     });
   };
 
   useEffect(() => {
-    socket.on("callUser", (data) => {
+    socket.on('callUser', (data) => {
       setupIncomingCall(data, socket);
     });
 
-    socket.on("ignoreCall", () => {
+    socket.on('ignoreCall', () => {
       resetCall();
     });
 
-    socket.on("endCall", () => {
+    socket.on('endCall', () => {
       resetCall();
     });
 
-    socket.on("busy", () => {
-      alert("The user you are trying to call is on another call!");
+    socket.on('busy', () => {
+      alert('The user you are trying to call is on another call!');
       window.location.reload();
     });
 
     return () => {
-      socket.off("callUser");
-      socket.off("ignoreCall");
-      socket.off("endCall");
-      socket.off("busy");
+      socket.off('callUser');
+      socket.off('ignoreCall');
+      socket.off('endCall');
+      socket.off('busy');
     };
     // eslint-disable-next-line
   }, [socket]);
 
   useEffect(() => {
-    socket.on("newMessage", async (data) => {
+    socket.on('newMessage', async (data) => {
       try {
-        swapChat(data);
-        addMessageToChat(data, socket);
+        await addMessageToChat(data, socket);
+        await setUnread(data);
         notifyUser(data);
       } catch (error) {
-        console.error("Error handling new message:", error);
+        console.error('Error handling new message:', error);
       }
     });
 
-    socket.on("chatInfo", (chat) => {
+    socket.on('chatInfo', (chat) => {
       updateChat(chat);
     });
 
-    socket.on("messageDeleted", ({ messageID, conversationID }) => {
+    socket.on('messageDeleted', ({ messageID, conversationID }) => {
       onDeleteMessage(messageID, conversationID);
     });
 
-    socket.on("error", ({ message }) => {
+    socket.on('error', ({ message }) => {
       alert(message);
     });
 
-    socket.on("newGroup", (data) => {
+    socket.on('newGroup', (data) => {
       addGroupChat(data, setCreateGroupChat, setClear);
     });
 
-    socket.on("test", (data) => {
+    socket.on('test', (data) => {
       console.log(data);
     });
 
-    socket.on("chats", (data) => {
+    socket.on('chats', (data) => {
       updateChats(data);
     });
 
-    socket.on("groupMemberAdded", (data) => {
+    socket.on('groupMemberAdded', (data) => {
       addMemberToGroup(data);
     });
 
-    socket.on("groupUpdated", (data) => {
+    socket.on('groupUpdated', (data) => {
       updateGroupChat(data);
     });
 
-    socket.on("callAccepted", (signal) => {
+    socket.on('callAccepted', (signal) => {
       onCallAccepted(signal);
     });
 
     return () => {
-      socket.off("newMessage");
-      socket.off("messageDeleted");
-      socket.off("error");
-      socket.off("newGroup");
-      socket.off("groups");
-      socket.off("chats");
-      socket.off("groupMemberAdded");
-      socket.off("callAccepted");
+      socket.off('newMessage');
+      socket.off('messageDeleted');
+      socket.off('error');
+      socket.off('newGroup');
+      socket.off('groups');
+      socket.off('chats');
+      socket.off('groupMemberAdded');
+      socket.off('callAccepted');
     };
     // eslint-disable-next-line
   }, [chatting, user]);
@@ -247,59 +247,60 @@ export const MainProvider = ({ children }) => {
       clearChats();
     };
 
-    socket.emit("userData", user);
+    socket.emit('userData', user);
 
-    socket.on("connect", () => {
-      console.log("Connected to server");
-      socket.emit("userData", user);
+    socket.on('connect', () => {
+      console.log('Connected to server');
+      socket.emit('userData', user);
     });
 
-    if (user?.id) socket.emit("getChats", user.username);
+    if (user?.id) socket.emit('getChats', user.username);
 
-    socket.on("tokenNotValid", handleTokenNotValid);
-    socket.on("userData", handleUserData);
+    socket.on('tokenNotValid', handleTokenNotValid);
+    socket.on('userData', handleUserData);
 
     return () => {
-      socket.off("tokenNotValid", handleTokenNotValid);
-      socket.off("userData", handleUserData);
-      socket.off("connect");
+      socket.off('tokenNotValid', handleTokenNotValid);
+      socket.off('userData', handleUserData);
+      socket.off('connect');
     };
     // eslint-disable-next-line
   }, [user]);
 
   useEffect(() => {
-    const handleUserAdded = (data) => {
+    const handleUserAdded = async (data) => {
       if (data.username !== user?.username) {
         // Check if the user already exists in chats
-        const existingChat = chats.find((chat) => chat.id === data.id);
+        const existingChat = await readFromDB(data.id);
+        console.log('existingChat', existingChat);
 
         if (!existingChat) {
-          const updatedChats = [...chats, data];
-          localStorage.setItem("chats", JSON.stringify(updatedChats));
-          setChats(updatedChats);
+          await saveToDB(data);
+          const chats = await readAllFromDB();
+          setChats(chats);
         }
       }
     };
 
     const handleNotFound = () => {
-      alert("User not found!");
+      alert('User not found!');
     };
 
-    socket.on("userAdded", handleUserAdded);
-    socket.on("notFound", handleNotFound);
+    socket.on('userAdded', handleUserAdded);
+    socket.on('notFound', handleNotFound);
 
     return () => {
-      socket.off("userAdded", handleUserAdded);
-      socket.off("notFound", handleNotFound);
+      socket.off('userAdded', handleUserAdded);
+      socket.off('notFound', handleNotFound);
     };
     // eslint-disable-next-line
   }, [user, chats]);
 
   useEffect(() => {
     let interval = null;
-    if (chatting !== null && chatting?.chatType === "private") {
+    if (chatting !== null && chatting?.chatType === 'private') {
       interval = setInterval(() => {
-        socket.emit("online", chatting.username);
+        socket.emit('online', chatting.username);
       }, 2000);
     }
     return () => {
