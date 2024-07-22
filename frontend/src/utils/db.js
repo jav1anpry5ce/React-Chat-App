@@ -43,7 +43,7 @@ export const readAllFromDB = async () => {
     console.log('chats', chats);
     chats.sort(
       (a, b) =>
-        new Date(b.messages.at(-1)?.time) - new Date(a.messages.at(-1)?.time)
+        new Date(b?.messages.at(-1)?.time) - new Date(a?.messages.at(-1)?.time)
     );
     return chats;
   } catch (error) {
