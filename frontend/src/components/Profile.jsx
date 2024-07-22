@@ -54,12 +54,12 @@ export default function Profile() {
     const formData = new FormData();
     formData.append("image", image);
     try {
-      const user = await axios.post(
+      const request = await axios.post(
         `${process.env.REACT_APP_API_URI}/api/upload`,
         formData,
         config
       );
-      updateUser(user.data);
+      updateUser(request.data.user);
       setLoading(false);
       setImage(null);
     } catch (error) {
