@@ -40,9 +40,10 @@ export const readAllFromDB = async () => {
     const tx = db.transaction('chats', 'readonly');
     const store = tx.objectStore('chats');
     const chats = await store.getAll();
+    console.log('chats', chats);
     chats.sort(
       (a, b) =>
-        new Date(b.messages.at(-1).time) - new Date(a.messages.at(-1).time)
+        new Date(b.messages.at(-1)?.time) - new Date(a.messages.at(-1)?.time)
     );
     return chats;
   } catch (error) {
