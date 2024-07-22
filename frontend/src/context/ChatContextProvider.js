@@ -82,14 +82,12 @@ export const ChatProvider = ({ children }) => {
       newChats.forEach(async (chat) => {
         const existingChat = await readFromDB(chat.id);
         if (!existingChat) {
+          chat.unread = chat.messages.length;
           await saveToDB(chat);
           return;
         }
-        existingChat.unread +=
-          existingChat.messages.length - chat.messages.length;
-        existingChat.messages = chat.messages;
-        existingChat.lastMessage = chat.lastMessage;
-        await saveToDB(existingChat);
+        chat.unread += existingChat.messages.length - chat.messages.length;
+        await saveToDB(chat);
       });
       const chats = await readAllFromDB();
       setChats(chats);
