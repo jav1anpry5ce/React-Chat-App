@@ -102,11 +102,6 @@ export const MainProvider = ({ children }) => {
       return;
     }
 
-    // Set up audio notification
-    const audioNotification = new Audio();
-    audioNotification.src = 'notification-sound.mp3';
-    audioNotification.volume = 0.045;
-
     // Display notification
     const notification = createNotification(data);
     setNotifications((prev) => [...prev, notification]);
@@ -115,9 +110,6 @@ export const MainProvider = ({ children }) => {
     setTimeout(() => {
       setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
     }, 5000);
-
-    // Play audio notification
-    audioNotification.play();
   };
 
   const createNotification = (data) => {

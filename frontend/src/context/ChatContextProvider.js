@@ -128,9 +128,14 @@ export const ChatProvider = ({ children }) => {
   };
 
   const updateChat = async (chat) => {
-    console.log('chat', chat);
     const existingChat = await readFromDB(chat.id);
-    if (!existingChat) return;
+    if (!existingChat) {
+      chat.unread = 1;
+      await saveToDB(chat);
+      const chats = await readAllFromDB();
+      setChats(chats);
+      return;
+    }
     existingChat.unread = 1;
     await saveToDB(existingChat);
     const chats = await readAllFromDB();
