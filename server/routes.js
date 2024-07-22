@@ -177,7 +177,10 @@ router.post("/upload", async (req, res) => {
 
         try {
           await uploadPhoto(token, image_url);
-          res.status(200).send({ message: "Image uploaded successfully!" });
+          const user = await getUserByToken(token);
+          res
+            .status(200)
+            .send({ message: 'Image uploaded successfully!', user });
         } catch (error) {
           res.status(500).send({ message: error.message });
         }
