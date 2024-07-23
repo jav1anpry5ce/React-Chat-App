@@ -34,7 +34,7 @@ export default function Profile() {
         formData,
         config
       );
-      updateUser(user.data);
+      updateUser(user.data.user);
       setLoading(false);
     } catch (error) {
       console.error(error);
